@@ -1,8 +1,8 @@
 # GeneralsOnline-MacPatch
 
 Community assets shipped to macOS players by the launcher. Packed by
-`pack_upload_patch.sh` into `GO_Mac_Patch.zip` and published as a GitHub release; the
-launcher downloads that archive and merges it into the game install.
+`pack_upload.sh` into release zips and published on GitHub; the launcher downloads
+those archives and merges them into the game install.
 
 ## Layout
 
@@ -64,8 +64,16 @@ the ranked community maps shipped here plus tooltips for the modified control ba
 
 ## Publishing
 
+GitHub workflow (release `v1.0`):
+
 ```sh
-./pack_upload_patch.sh
+./download_unpack.sh          # download + unpack (Patch and/or mods)
+# …edit GO_Mac_Patch / GO_Mac_Mod_* …
+./pack_upload.sh              # pack + upload
 ```
+
+Selective: `./download_unpack.sh Patch Contra007`, `./pack_upload.sh --no-upload ContraX`.
+
+Local mod assembly from raw sources (`downloads/files`): `./assemble_mods.sh`.
 
 Requires `gh` authenticated against `Okladnoj/GeneralsOnline-MacPatch`.
