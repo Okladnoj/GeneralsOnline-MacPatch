@@ -1,4 +1,8 @@
+.DS_Store
 downloads/
+# Local originals of patched archives: too large for GitHub (100 MB limit).
+# The versioned override in assets/<mod>/overrides/ is what the assembler replays.
+assets/**/*.big
 GO_Mac_Patch/
 GO_Mac_Patch.zip
 GO_Mac_Mod_*/
