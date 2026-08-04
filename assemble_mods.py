@@ -25,6 +25,7 @@ ASSETS = os.path.join(ROOT, "assets")
 
 DRY_RUN = "--dry-run" in sys.argv or "--markers" in sys.argv
 EMIT_MARKERS = "--markers" in sys.argv
+TARGETS = [a for a in sys.argv[1:] if not a.startswith("-")]
 
 
 class Archive:
@@ -36,6 +37,41 @@ class Archive:
     @property
     def source(self):
         return os.path.join(SRC, self.layer_dir, self.original)
+
+
+class Tree:
+    """A mod that ships loose files rather than layered archives.
+
+    Contra packs everything into .ctr archives, so its tree is built by naming and
+    ordering them. Apocalptic and Silent Death are installed on Windows by copying a
+    folder over the game directory, so the folder itself is the mod: it is linked as
+    it stands, minus what cannot work here (Miles Sound System, editor leftovers).
+
+    Renames exist because the engine skips NNN_*.big under a mod - those names belong
+    to the community patch overlay. A mod archive that must load gets a two digit name.
+    """
+
+    SKIP_NAMES = (".DS_Store", "Thumbs.db", "desktop.ini")
+
+    def __init__(self, source, skip_dirs=(), skip_suffixes=(), rename=None):
+        self.source = source
+        self.skip_dirs = set(skip_dirs)
+        self.skip_suffixes = tuple(skip_suffixes)
+        self.rename = rename or {}
+
+    def files(self):
+        """Yields (absolute source, path relative to the mod root)."""
+        root = os.path.join(SRC, self.source)
+        for current, dirs, names in os.walk(root):
+            relative_dir = os.path.relpath(current, root)
+            dirs[:] = sorted(d for d in dirs if d not in self.skip_dirs)
+
+            for name in sorted(names):
+                if name in self.SKIP_NAMES or name.endswith(self.skip_suffixes):
+                    continue
+
+                relative = name if relative_dir == "." else os.path.join(relative_dir, name)
+                yield os.path.join(current, name), self.rename.get(relative, relative)
 
 
 # Unofficial Control Bar Pro 2.1.1 rebuilt for Contra by Hojjat. Nine leading '!' put it
@@ -210,6 +246,79 @@ MODS = [
         },
     },
     {
+        "dest": "GO_Mac_Mod_Apocalptic",
+        "assets": "Apocalptic",
+        "tree": Tree(
+            "Apocalptic",
+            skip_dirs=["MSS"],
+            skip_suffixes=[".BAK"],
+            rename={
+                "340_ControlBarProZH.big": "00_ControlBarProZH.big",
+                "340_ControlBarPro1080ZH.big": "01_ControlBarPro1080ZH.big",
+                "340_ControlBarProData1080ZH.big": "02_ControlBarProData1080ZH.big",
+                "340_ControlBarProArt1080ZH.big": "03_ControlBarProArt1080ZH.big",
+            },
+        ),
+        "layers": [],
+        "extras": [],
+        "overrides": [],
+        "anchors": [
+            "00_ControlBarProZH.big",
+            "03_ControlBarProArt1080ZH.big",
+            "Install_Final.bmp",
+            "Data/INI/Object/SupremeCommander.ini",
+            "Data/INI/GameData.ini",
+            "Art/W3D/12ABLT.W3D",
+            "Maps/Ancient Chinese Land/Ancient Chinese Land.map",
+        ],
+        "config": {
+            "id": "apocalptic",
+            "displayName": "Apocalptic",
+            "version": "unknown",
+            "baseGame": "zh",
+            "online": False,
+            "maskBaseScripts": True,
+            "description": "Apocalptic Mod for Zero Hour, curated for macOS",
+            "author": "Aloshka Tech Track / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 620,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_Silent_Death",
+        "assets": "Silent_Death",
+        "tree": Tree("Silent_Death"),
+        "layers": [],
+        "extras": [],
+        "overrides": [],
+        # One anchor per release part, so a part that never arrived reads as damaged.
+        "anchors": [
+            "Install_Final.bmp",
+            "Data/INI/object/Turkey.ini",
+            "00LSF0118.big",
+            "Art/Textures/sdprchcm.dds",
+            "Art/W3D/sddzr.w3d",
+        ],
+        "parts": [
+            ["config.json", "Install_Final.bmp", "LSFkrInfEngineer.dds", "Data", "Maps", "Window"],
+            ["!00EgyPatch.big", "00LSF0118.big", "Art/Terrain"],
+            ["Art/Textures"],
+            ["Art/W3D"],
+        ],
+        "config": {
+            "id": "silent-death",
+            "displayName": "Silent Death",
+            "version": "25",
+            "baseGame": "zh",
+            "online": False,
+            "maskBaseScripts": True,
+            "description": "Silent Death v25 for Zero Hour, curated for macOS",
+            "author": "Silent Death Mod Team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 5100,
+        },
+    },
+    {
         "dest": "GO_Mac_Mod_ContraX",
         "assets": "ContraX",
         "layers": contrax_layers(),
@@ -292,6 +401,23 @@ def apply_override(archive_path, entry_name, payload_path):
     raise SystemExit(f"override target not found in archive: {entry_name}")
 
 
+def missing_sources(mod):
+    tree = mod.get("tree")
+    if tree and not os.path.isdir(os.path.join(SRC, tree.source)):
+        return f"downloads/files/{tree.source}/"
+
+    for archive in resolve_layers(mod["layers"]):
+        if not os.path.exists(archive.source):
+            return f"{archive.layer_dir}/{archive.original}"
+
+    for source, relative in mod["extras"]:
+        override = os.path.join(ASSETS, mod["assets"], os.path.basename(relative))
+        if not os.path.exists(override) and not os.path.exists(os.path.join(SRC, source)):
+            return source
+
+    return None
+
+
 def build(mod):
     dest_dir = os.path.join(ROOT, mod["dest"])
     asset_dir = os.path.join(ASSETS, mod["assets"])
@@ -301,14 +427,40 @@ def build(mod):
 
     print(f"==> {mod['dest']}")
 
+    # downloads/files is wiped whenever un_zip.sh runs for another mod, and a built tree
+    # is the only copy left once its sources are gone. Rebuilding starts by deleting the
+    # tree, so a missing source must stop us before that, not halfway through.
+    missing = missing_sources(mod)
+    if missing:
+        print(f"    SKIPPED: source missing ({missing})", file=sys.stderr)
+        return []
+
     if not DRY_RUN:
         shutil.rmtree(dest_dir, ignore_errors=True)
         os.makedirs(dest_dir, exist_ok=True)
 
-    archives = resolve_layers(mod["layers"])
     names = []
+    tree = mod.get("tree")
 
-    for index, archive in enumerate(archives):
+    if tree:
+        for source, relative in tree.files():
+            names.append(relative)
+            link(source, os.path.join(dest_dir, relative))
+        print(f"    {len(names)} files <- downloads/files/{tree.source}/")
+
+        # A layered mod names its local edits in "extras"; a tree has no such list, so
+        # whatever sits in assets/<mod>/ simply wins over the file of the same name.
+        for name in sorted(os.listdir(asset_dir) if os.path.isdir(asset_dir) else []):
+            override = os.path.join(asset_dir, name)
+            if not os.path.isfile(override):
+                continue
+
+            print(f"    {name:<34} <- assets/{mod['assets']}/{name}")
+            link(override, os.path.join(dest_dir, name))
+            if name not in names:
+                names.append(name)
+
+    for index, archive in enumerate(resolve_layers(mod["layers"])):
         filename = f"{index:02d}_{archive.name}.big"
         names.append(filename)
         print(f"    {filename:<34} <- {archive.layer_dir}/{archive.original}")
@@ -349,6 +501,17 @@ def build(mod):
 
 def emit_markers(mod):
     """Print the ModSpec.markers array for Launcher/Sources/GameProfile.swift."""
+    # A loose mod holds thousands of files; the launcher checks a chosen few instead,
+    # one per release part, which is what catches a part that never arrived.
+    if mod.get("anchors"):
+        print(f"        // {mod['dest']} - generated by assemble_mods.py --markers")
+        print("        markers: [")
+        for entry in mod["anchors"]:
+            print(f'            "{entry}",')
+        print("        ]")
+        print()
+        return []
+
     names = [f"{i:02d}_{a.name}.big" for i, a in enumerate(resolve_layers(mod["layers"]))]
     extras = [relative for _source, relative in mod["extras"]]
 
@@ -405,6 +568,47 @@ def write_contrax_parts(names):
         print(f"    part {number}: {size / 1024 ** 3:.2f} GiB")
 
 
+def write_tree_parts(mod):
+    """Emit the release-part lists of a loose mod: whole directories, not file lists.
+
+    ContraX splits by archive because it has a dozen of them. A loose mod has
+    thousands of files, so the parts are cut along top level directories and zip is
+    handed those directly.
+    """
+    dest_dir = os.path.join(ROOT, mod["dest"])
+    prefix = mod["config"]["id"].replace("-", "_").upper()
+    lines = [
+        "#!/bin/bash",
+        f"# {mod['dest']} release-part lists (relative to {mod['dest']}/).",
+        "# Generated by assemble_mods.py - do not edit by hand.",
+        "# Rules: no overlap; config.json only in part 1; each zip stays under 2 GiB.",
+        "",
+    ]
+
+    for number, entries in enumerate(mod["parts"], start=1):
+        size = sum(
+            os.path.getsize(os.path.join(current, name))
+            for entry in entries
+            for current, _dirs, names in os.walk(os.path.join(dest_dir, entry))
+            for name in names
+        ) + sum(
+            os.path.getsize(os.path.join(dest_dir, entry))
+            for entry in entries
+            if os.path.isfile(os.path.join(dest_dir, entry))
+        )
+
+        print(f"    part {number}: {size / 1024 ** 3:.2f} GiB")
+        lines.append(f"{prefix}_PART{number}=(")
+        lines.extend(f'  "{entry}"' for entry in entries)
+        lines.append(")")
+        lines.append("")
+
+    if not DRY_RUN:
+        script = os.path.join(ROOT, f"{mod['config']['id'].replace('-', '_')}_parts.sh")
+        with open(script, "w") as handle:
+            handle.write("\n".join(lines))
+
+
 def verify(mod):
     """Every .big must really be a BIG archive, and a mod is unusable without config.json."""
     dest_dir = os.path.join(ROOT, mod["dest"])
@@ -435,28 +639,53 @@ def verify(mod):
     return failures
 
 
+def selected_mods():
+    """No arguments means every mod; a name picks one, matching either id or folder."""
+    if not TARGETS:
+        return MODS
+
+    chosen = []
+    for target in TARGETS:
+        wanted = target.lower().replace("-", "").replace("_", "")
+        matches = [m for m in MODS
+                   if wanted in (m["config"]["id"].replace("-", ""), m["dest"].lower().replace("go_mac_mod_", ""))]
+        if not matches:
+            raise SystemExit(f"unknown mod: {target} "
+                             f"(known: {', '.join(m['config']['id'] for m in MODS)})")
+        chosen.extend(matches)
+
+    return chosen
+
+
 def main():
     if DRY_RUN:
         print("(dry run: nothing is written)\n")
 
     contrax_names = []
+    mods = selected_mods()
 
-    for mod in MODS:
+    for mod in mods:
         names = build(mod)
         if mod["dest"] == "GO_Mac_Mod_ContraX":
             contrax_names = names
         print()
 
-    print("==> ContraX release parts")
     if contrax_names and not DRY_RUN:
+        print("==> ContraX release parts")
         write_contrax_parts(contrax_names)
+
+    for mod in mods:
+        if mod.get("parts"):
+            print(f"==> {mod['dest']} release parts")
+            write_tree_parts(mod)
+            print()
 
     if DRY_RUN:
         print("\nDone.")
         return
 
     print("\n==> Summary")
-    failures = sum(verify(mod) for mod in MODS)
+    failures = sum(verify(mod) for mod in mods)
 
     if failures:
         raise SystemExit(f"\n{failures} problem(s) found.")

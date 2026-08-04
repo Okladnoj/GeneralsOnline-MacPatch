@@ -4,7 +4,7 @@
 # Usage:
 #   ./download_unpack.sh                 # Patch + all mods
 #   ./download_unpack.sh Patch Contra007
-#   ./download_unpack.sh ContraX
+#   ./download_unpack.sh ContraX Silent_Death
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -16,16 +16,16 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death)
 fi
 
 download_unzip() {
@@ -41,12 +41,35 @@ download_unzip() {
   unzip -qo "$zip" -d "$dest"
 }
 
+download_parts() {
+  local tree="$1"
+  local count="$2"
+  local part
+
+  echo "📥 Downloading $tree.{1..$count}.zip (release $TAG)..."
+  for (( part = 1; part <= count; part++ )); do
+    gh release download "$TAG" -p "$tree.$part.zip" --repo "$REPO" --clobber
+  done
+
+  echo "📦 Merging parts into $tree/ ..."
+  rm -rf "$tree"
+  mkdir "$tree"
+  for (( part = 1; part <= count; part++ )); do
+    unzip -qo "$tree.$part.zip" -d "$tree"
+  done
+
+  if [[ ! -f "$tree/config.json" ]]; then
+    echo "missing $tree/config.json after merge" >&2
+    exit 1
+  fi
+}
+
 for t in "${TARGETS[@]}"; do
   case "$t" in
     Patch)
       download_unzip GO_Mac_Patch.zip GO_Mac_Patch
       ;;
-    Contra007|Contra008|Contra009)
+    Contra007|Contra008|Contra009|Apocalptic)
       download_unzip "GO_Mac_Mod_$t.zip" "GO_Mac_Mod_$t"
       if [[ ! -f "GO_Mac_Mod_$t/config.json" ]]; then
         echo "missing GO_Mac_Mod_$t/config.json" >&2
@@ -70,6 +93,9 @@ for t in "${TARGETS[@]}"; do
         echo "missing GO_Mac_Mod_ContraX/config.json after merge" >&2
         exit 1
       fi
+      ;;
+    Silent_Death)
+      download_parts GO_Mac_Mod_Silent_Death 4
       ;;
   esac
 done
