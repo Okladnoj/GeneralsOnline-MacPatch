@@ -16,16 +16,16 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR)
 fi
 
 download_unzip() {
@@ -69,7 +69,7 @@ for t in "${TARGETS[@]}"; do
     Patch)
       download_unzip GO_Mac_Patch.zip GO_Mac_Patch
       ;;
-    Contra007|Contra008|Contra009|Apocalptic)
+    Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR)
       download_unzip "GO_Mac_Mod_$t.zip" "GO_Mac_Mod_$t"
       if [[ ! -f "GO_Mac_Mod_$t/config.json" ]]; then
         echo "missing GO_Mac_Mod_$t/config.json" >&2

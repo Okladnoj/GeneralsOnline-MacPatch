@@ -155,6 +155,63 @@ def contrax_layers():
     ]
 
 
+def shockwave_layers():
+    base, hotfix = "ShockWave_1.201", "Shw_1.201_Hotfix_v6"
+    return [
+        [
+            Archive(base, "!0Shwpatch.gib", "Shwpatch"),
+            Archive(base, "!Shw2DArt.gib", "2DArt"),
+            Archive(base, "!ShwAudio.gib", "Audio"),
+            Archive(base, "!ShwTextures.gib", "Textures"),
+            Archive(base, "!ShwVoice.gib", "Voice"),
+            Archive(base, "!ShwW3D.gib", "W3D"),
+            Archive(base, "!Shw_Challenge.gib", "Challenge"),
+            Archive(base, "!Shw_ini.gib", "INI"),
+            Archive(base, "!Shw_maps.gib", "Maps"),
+            Archive(base, "!Shw_scripts.gib", "Scripts"),
+            Archive(base, "!Shw_wnd.gib", "Window"),
+        ],
+        [
+            Archive(hotfix, "!!!!!0Shw12HotfixV6-Fixes.big", "HotfixV6_Fixes"),
+            Archive(hotfix, "!!!!!!0Shw12HotfixV6-ChallengeMaps.big", "HotfixV6_ChallengeMaps"),
+        ],
+        [
+            Archive("ControlBarPro_SHW.1", "!!!!!ControlBarPro SHW.big", "ControlBarPro_SHW"),
+        ],
+    ]
+
+
+def rotr_layers():
+    base, patch = "ROTR_1.85", "ROTR_1.86"
+    return [
+        [
+            Archive(base, "!!Rotr_Patch.gib", "Patch"),
+            Archive(base, "!Rotr_2D.gib", "2D"),
+            Archive(base, "!Rotr_AI.gib", "AI"),
+            Archive(base, "!Rotr_Audio.gib", "Audio"),
+            Archive(base, "!Rotr_Blckr.gib", "Blocker"),
+            Archive(base, "!Rotr_English.gib", "English"),
+            Archive(base, "!Rotr_INI.gib", "INI"),
+            Archive(base, "!Rotr_Maps.gib", "Maps"),
+            Archive(base, "!Rotr_Music.gib", "Music"),
+            Archive(base, "!Rotr_Terrain.gib", "Terrain"),
+            Archive(base, "!Rotr_Textures.gib", "Textures"),
+            Archive(base, "!Rotr_Voice.gib", "Voice"),
+            Archive(base, "!Rotr_W3D.gib", "W3D"),
+            Archive(base, "!Rotr_Window.gib", "Window"),
+        ],
+        [
+            Archive(patch, "!!Rotr_Patch.gib", "Patch"),
+            Archive(patch, "!Rotr_AI.gib", "AI"),
+            Archive(patch, "!Rotr_English.gib", "English"),
+            Archive(patch, "!Rotr_INI.gib", "INI"),
+        ],
+        [
+            Archive(".", "!!!!!ROTR_ControlBarPro.gib", "ControlBarPro_RotR"),
+        ],
+    ]
+
+
 MODS = [
     {
         "dest": "GO_Mac_Mod_Contra007",
@@ -340,6 +397,64 @@ MODS = [
             "approxSizeMB": 3200,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_ShockWave",
+        "assets": "ShockWave",
+        "layers": shockwave_layers(),
+        "extras": [
+            ("ShockWave_1.201/Install_Final_shw.bmp", "Install_Final.bmp"),
+            ("ShockWave_1.201/Data/Movies/Comp_ArmourGen_000.bik", "Data/Movies/Comp_ArmourGen_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_ArmourGen_inv_000.bik", "Data/Movies/Comp_ArmourGen_inv_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_SalvageGen_000.bik", "Data/Movies/Comp_SalvageGen_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_SalvageGen_inv_000.bik", "Data/Movies/Comp_SalvageGen_inv_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_Shw_LaserGen_000.bik", "Data/Movies/Comp_Shw_LaserGen_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_Shw_LaserGen_inv_000.bik", "Data/Movies/Comp_Shw_LaserGen_inv_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_Shw_StealthGen_000.bik", "Data/Movies/Comp_Shw_StealthGen_000.bik"),
+            ("ShockWave_1.201/Data/Movies/Comp_Shw_StealthGen_inv_000.bik", "Data/Movies/Comp_Shw_StealthGen_inv_000.bik"),
+            ("ShockWave_1.201/Data/Movies/SW_GC_Background.bik", "Data/Movies/SW_GC_Background.bik"),
+            ("ShockWave_1.201/Data/Movies/Shw_Intro.bik", "Data/Movies/Shw_Intro.bik"),
+        ],
+        "unpacked": [
+            ("ShockWave_1.201/!Shw_ini.gib", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "shockwave",
+            "displayName": "ShockWave",
+            "version": "1.201-hf6",
+            "baseGame": "zh",
+            "online": False,
+            "maskBaseScripts": True,
+            "description": "ShockWave 1.201 + Hotfix v6 (challenge maps, Nuke General AI), curated for macOS",
+            "author": "SWR Productions / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 520,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_RotR",
+        "assets": "RotR",
+        "layers": rotr_layers(),
+        "extras": [
+            ("ROTR_1.86/Install_Final_rotr.bmp", "Install_Final.bmp"),
+            ("ROTR_1.85/00000000.016_", "00000000.016"),
+            ("ROTR_1.85/00000000.256_", "00000000.256"),
+            ("ROTR_1.85/Data/Movies/ROTR_Intro.bik", "Data/Movies/ROTR_Intro.bik"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "rotr",
+            "displayName": "Rise of the Reds",
+            "version": "1.86",
+            "baseGame": "zh",
+            "online": False,
+            "maskBaseScripts": True,
+            "description": "Rise of the Reds 1.85 + Patch 1.86, curated for macOS",
+            "author": "SWR Productions / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1230,
+        },
+    },
 ]
 
 
@@ -401,6 +516,23 @@ def apply_override(archive_path, entry_name, payload_path):
     raise SystemExit(f"override target not found in archive: {entry_name}")
 
 
+def extract_entry(archive_path, entry_name, dest):
+    for name, offset, size in big_entries(archive_path):
+        if name.lower() != entry_name.lower():
+            continue
+
+        with open(archive_path, "rb") as handle:
+            handle.seek(offset)
+            payload = handle.read(size)
+
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        with open(dest, "wb") as handle:
+            handle.write(payload)
+        return
+
+    raise SystemExit(f"entry not found in archive: {entry_name}")
+
+
 def missing_sources(mod):
     tree = mod.get("tree")
     if tree and not os.path.isdir(os.path.join(SRC, tree.source)):
@@ -413,6 +545,10 @@ def missing_sources(mod):
     for source, relative in mod["extras"]:
         override = os.path.join(ASSETS, mod["assets"], os.path.basename(relative))
         if not os.path.exists(override) and not os.path.exists(os.path.join(SRC, source)):
+            return source
+
+    for source, _entry_name, _relative in mod.get("unpacked", []):
+        if not os.path.exists(os.path.join(SRC, source)):
             return source
 
     return None
@@ -476,6 +612,11 @@ def build(mod):
         print(f"    {relative:<34} <- {source}")
         link(os.path.join(SRC, source), os.path.join(dest_dir, relative))
 
+    for source, entry_name, relative in mod.get("unpacked", []):
+        print(f"    {relative:<34} <- {source} :: {entry_name}")
+        if not DRY_RUN:
+            extract_entry(os.path.join(SRC, source), entry_name, os.path.join(dest_dir, relative))
+
     for archive_name, entry_name, asset_relative in mod["overrides"]:
         target = next(n for n in names if n.endswith(f"_{archive_name}.big"))
         payload = os.path.join(asset_dir, asset_relative)
@@ -514,10 +655,11 @@ def emit_markers(mod):
 
     names = [f"{i:02d}_{a.name}.big" for i, a in enumerate(resolve_layers(mod["layers"]))]
     extras = [relative for _source, relative in mod["extras"]]
+    unpacked = [relative for _source, _entry_name, relative in mod.get("unpacked", [])]
 
     print(f"        // {mod['dest']} - generated by assemble_mods.py --markers")
     print("        markers: [")
-    for entry in names + extras:
+    for entry in names + extras + unpacked:
         print(f'            "{entry}",')
     print("        ]")
     print()

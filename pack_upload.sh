@@ -1,7 +1,7 @@
 #!/bin/bash
 # Pack local trees into release zips and upload to GitHub.
 #
-# Trees: GO_Mac_Patch/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death/
+# Trees: GO_Mac_Patch/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR/
 # Split mods ship numbered parts: ContraX → .{1,2,3}.zip (contrax_parts.sh),
 # Silent_Death → .{1,2,3,4}.zip (silent_death_parts.sh).
 #
@@ -29,16 +29,16 @@ for arg in "$@"; do
     --no-upload) UPLOAD=0 ;;
     --upload) UPLOAD=1 ;;
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR)
 fi
 
 status=0
@@ -173,7 +173,7 @@ pack_parts() {
 for t in "${TARGETS[@]}"; do
   case "$t" in
     Patch) pack_dir GO_Mac_Patch GO_Mac_Patch.zip 0 ;;
-    Contra007|Contra008|Contra009|Apocalptic) pack_dir "GO_Mac_Mod_$t" "GO_Mac_Mod_$t.zip" 1 ;;
+    Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR) pack_dir "GO_Mac_Mod_$t" "GO_Mac_Mod_$t.zip" 1 ;;
     ContraX) pack_contrax_parts ;;
     Silent_Death) pack_parts GO_Mac_Mod_Silent_Death SILENT_DEATH 4 ;;
   esac
