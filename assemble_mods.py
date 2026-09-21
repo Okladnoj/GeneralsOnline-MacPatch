@@ -22,9 +22,12 @@ import sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "downloads", "files")
 ASSETS = os.path.join(ROOT, "assets")
+CATALOG = os.path.join(ROOT, "..", "general_online_zh", "public", "api", "mods.json")
+RELEASE_BASE = "https://github.com/Okladnoj/GeneralsOnline-MacPatch/releases/latest/download"
+BASE_PROFILES = {"zh": "z_generals"}
 
-DRY_RUN = "--dry-run" in sys.argv or "--markers" in sys.argv
-EMIT_MARKERS = "--markers" in sys.argv
+DRY_RUN = "--dry-run" in sys.argv
+EMIT_CATALOG = "--catalog" in sys.argv
 TARGETS = [a for a in sys.argv[1:] if not a.startswith("-")]
 
 
@@ -157,6 +160,7 @@ def contrax_layers():
 
 def shockwave_layers():
     base, hotfix = "ShockWave_1.201", "Shw_1.201_Hotfix_v6"
+    spe = "Shockwave_Sinple_Player_Experience_2.1.3"
     return [
         [
             Archive(base, "!0Shwpatch.gib", "Shwpatch"),
@@ -173,7 +177,11 @@ def shockwave_layers():
         ],
         [
             Archive(hotfix, "!!!!!0Shw12HotfixV6-Fixes.big", "HotfixV6_Fixes"),
-            Archive(hotfix, "!!!!!!0Shw12HotfixV6-ChallengeMaps.big", "HotfixV6_ChallengeMaps"),
+        ],
+        [
+            Archive(spe, "!ShwAudio.gib", "Audio"),
+            Archive(spe, "!Shw_Challenge.gib", "Challenge"),
+            Archive(spe, "!Shw_ini.gib", "INI"),
         ],
         [
             Archive("ControlBarPro_SHW.1", "!!!!!ControlBarPro SHW.big", "ControlBarPro_SHW"),
@@ -216,6 +224,7 @@ MODS = [
     {
         "dest": "GO_Mac_Mod_Contra007",
         "assets": "Contra007",
+        "catalog": {"id": "m_contra007", "shortName": "CONTRA 007", "theme": "contra"},
         "layers": [
             [
                 Archive("Contra007", "!Contra007.big", "Contra007"),
@@ -242,6 +251,7 @@ MODS = [
             "id": "contra007",
             "displayName": "Contra 007",
             "version": "0.07.1",
+            "packageVersion": 1,
             "baseGame": "zh",
             "online": True,
             "maskBaseScripts": True,
@@ -254,6 +264,7 @@ MODS = [
     {
         "dest": "GO_Mac_Mod_Contra008",
         "assets": "Contra008",
+        "catalog": {"id": "m_contra008", "shortName": "CONTRA 008", "theme": "contra"},
         "layers": [
             [
                 Archive("Contra008FINAL", "!Contra008.ctr", "Contra008"),
@@ -271,6 +282,7 @@ MODS = [
             "id": "contra008",
             "displayName": "Contra 008",
             "version": "8.0.0",
+            "packageVersion": 1,
             "baseGame": "zh",
             "online": True,
             "maskBaseScripts": True,
@@ -283,6 +295,7 @@ MODS = [
     {
         "dest": "GO_Mac_Mod_Contra009",
         "assets": "Contra009",
+        "catalog": {"id": "m_contra009", "shortName": "CONTRA 009", "theme": "contra"},
         "layers": contra009_layers(),
         "extras": [
             ("Contra009Final/Install_Final_Contra.bmp", "Install_Final.bmp"),
@@ -293,6 +306,7 @@ MODS = [
             "id": "contra009",
             "displayName": "Contra 009",
             "version": "9.0.0-hf4",
+            "packageVersion": 1,
             "baseGame": "zh",
             "online": True,
             "maskBaseScripts": True,
@@ -303,8 +317,33 @@ MODS = [
         },
     },
     {
+        "dest": "GO_Mac_Mod_ContraX",
+        "assets": "ContraX",
+        "catalog": {"id": "m_contrax", "shortName": "CONTRA X", "theme": "contra"},
+        "layers": contrax_layers(),
+        "extras": [
+            ("ContraXBeta2/GenArial.ttf", "GenArial.ttf"),
+            ("ContraXBeta2/Install_Final_Contra.bmp", "Install_Final.bmp"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "contrax",
+            "displayName": "Contra X",
+            "version": "x-beta2-p1",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Curated Contra X Beta 2 + Patch 1 (EN, Enhanced music, Control Bar Pro)",
+            "author": "Contra Mod Team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 3200,
+        },
+    },
+    {
         "dest": "GO_Mac_Mod_Apocalptic",
         "assets": "Apocalptic",
+        "catalog": {"id": "m_apocalptic", "shortName": "APOCALPTIC", "theme": "contra"},
         "tree": Tree(
             "Apocalptic",
             skip_dirs=["MSS"],
@@ -332,6 +371,7 @@ MODS = [
             "id": "apocalptic",
             "displayName": "Apocalptic",
             "version": "unknown",
+            "packageVersion": 1,
             "baseGame": "zh",
             "online": False,
             "maskBaseScripts": True,
@@ -344,6 +384,7 @@ MODS = [
     {
         "dest": "GO_Mac_Mod_Silent_Death",
         "assets": "Silent_Death",
+        "catalog": {"id": "m_silent_death", "shortName": "SILENT DEATH", "theme": "contra"},
         "tree": Tree("Silent_Death"),
         "layers": [],
         "extras": [],
@@ -366,6 +407,7 @@ MODS = [
             "id": "silent-death",
             "displayName": "Silent Death",
             "version": "25",
+            "packageVersion": 1,
             "baseGame": "zh",
             "online": False,
             "maskBaseScripts": True,
@@ -376,30 +418,9 @@ MODS = [
         },
     },
     {
-        "dest": "GO_Mac_Mod_ContraX",
-        "assets": "ContraX",
-        "layers": contrax_layers(),
-        "extras": [
-            ("ContraXBeta2/GenArial.ttf", "GenArial.ttf"),
-            ("ContraXBeta2/Install_Final_Contra.bmp", "Install_Final.bmp"),
-        ],
-        "overrides": [],
-        "config": {
-            "id": "contrax",
-            "displayName": "Contra X",
-            "version": "x-beta2-p1",
-            "baseGame": "zh",
-            "online": True,
-            "maskBaseScripts": True,
-            "description": "Curated Contra X Beta 2 + Patch 1 (EN, Enhanced music, Control Bar Pro)",
-            "author": "Contra Mod Team / curated for macOS",
-            "bigGlob": "*.big",
-            "approxSizeMB": 3200,
-        },
-    },
-    {
         "dest": "GO_Mac_Mod_ShockWave",
         "assets": "ShockWave",
+        "catalog": {"id": "m_shockwave", "shortName": "SHOCKWAVE", "theme": "contra"},
         "layers": shockwave_layers(),
         "extras": [
             ("ShockWave_1.201/Install_Final_shw.bmp", "Install_Final.bmp"),
@@ -413,6 +434,28 @@ MODS = [
             ("ShockWave_1.201/Data/Movies/Comp_Shw_StealthGen_inv_000.bik", "Data/Movies/Comp_Shw_StealthGen_inv_000.bik"),
             ("ShockWave_1.201/Data/Movies/SW_GC_Background.bik", "Data/Movies/SW_GC_Background.bik"),
             ("ShockWave_1.201/Data/Movies/Shw_Intro.bik", "Data/Movies/Shw_Intro.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China01_Final_00s.bik", "Data/Movies/China01_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China02_Final_00s.bik", "Data/Movies/China02_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China03_Final_00s.bik", "Data/Movies/China03_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China04_Final_00s.bik", "Data/Movies/China04_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China05_Final_00s.bik", "Data/Movies/China05_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China06_Final_00s.bik", "Data/Movies/China06_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/China07_Final_00s.bik", "Data/Movies/China07_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA01_Final_00s.bik", "Data/Movies/GLA01_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA02_Final_00s.bik", "Data/Movies/GLA02_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA03_Final_00s.bik", "Data/Movies/GLA03_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA04_Final_00s.bik", "Data/Movies/GLA04_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA05_Final_00s.bik", "Data/Movies/GLA05_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA06_Final_00s.bik", "Data/Movies/GLA06_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA07_Final_00s.bik", "Data/Movies/GLA07_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/GLA08_Final_00s.bik", "Data/Movies/GLA08_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA01_Final_00s.bik", "Data/Movies/USA01_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA02_Final_00s.bik", "Data/Movies/USA02_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA03_Final_00s.bik", "Data/Movies/USA03_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA04_Final_00s.bik", "Data/Movies/USA04_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA06_Final_00s.bik", "Data/Movies/USA06_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA07_Final_00s.bik", "Data/Movies/USA07_Final_00s.bik"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA08_Final_00s.bik", "Data/Movies/USA08_Final_00s.bik"),
         ],
         "unpacked": [
             ("ShockWave_1.201/!Shw_ini.gib", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
@@ -421,19 +464,21 @@ MODS = [
         "config": {
             "id": "shockwave",
             "displayName": "ShockWave",
-            "version": "1.201-hf6",
+            "version": "1.201-hf6-spe2.1.3",
+            "packageVersion": 2,
             "baseGame": "zh",
             "online": False,
             "maskBaseScripts": True,
-            "description": "ShockWave 1.201 + Hotfix v6 (challenge maps, Nuke General AI), curated for macOS",
+            "description": "ShockWave 1.201 + Hotfix v6 + Singleplayer Experience 2.1.3 (full campaigns, 12 challenges), curated for macOS",
             "author": "SWR Productions / curated for macOS",
             "bigGlob": "*.big",
-            "approxSizeMB": 520,
+            "approxSizeMB": 1040,
         },
     },
     {
         "dest": "GO_Mac_Mod_RotR",
         "assets": "RotR",
+        "catalog": {"id": "m_rotr", "shortName": "RISE OF THE REDS", "theme": "contra"},
         "layers": rotr_layers(),
         "extras": [
             ("ROTR_1.86/Install_Final_rotr.bmp", "Install_Final.bmp"),
@@ -446,6 +491,7 @@ MODS = [
             "id": "rotr",
             "displayName": "Rise of the Reds",
             "version": "1.86",
+            "packageVersion": 1,
             "baseGame": "zh",
             "online": False,
             "maskBaseScripts": True,
@@ -558,9 +604,6 @@ def build(mod):
     dest_dir = os.path.join(ROOT, mod["dest"])
     asset_dir = os.path.join(ASSETS, mod["assets"])
 
-    if EMIT_MARKERS:
-        return emit_markers(mod)
-
     print(f"==> {mod['dest']}")
 
     # downloads/files is wiped whenever un_zip.sh runs for another mod, and a built tree
@@ -640,31 +683,75 @@ def build(mod):
     return names
 
 
-def emit_markers(mod):
-    """Print the ModSpec.markers array for Launcher/Sources/GameProfile.swift."""
+def catalog_markers(mod):
+    """Files the launcher checks to call a mod installed; it adds config.json itself."""
     # A loose mod holds thousands of files; the launcher checks a chosen few instead,
     # one per release part, which is what catches a part that never arrived.
     if mod.get("anchors"):
-        print(f"        // {mod['dest']} - generated by assemble_mods.py --markers")
-        print("        markers: [")
-        for entry in mod["anchors"]:
-            print(f'            "{entry}",')
-        print("        ]")
-        print()
-        return []
+        return list(mod["anchors"])
 
     names = [f"{i:02d}_{a.name}.big" for i, a in enumerate(resolve_layers(mod["layers"]))]
     extras = [relative for _source, relative in mod["extras"]]
     unpacked = [relative for _source, _entry_name, relative in mod.get("unpacked", [])]
 
-    print(f"        // {mod['dest']} - generated by assemble_mods.py --markers")
-    print("        markers: [")
-    for entry in names + extras + unpacked:
-        print(f'            "{entry}",')
-    print("        ]")
-    print()
+    return names + extras + unpacked
 
-    return names
+
+def release_zips(mod):
+    """A mod ships as <dest>.zip, or as <dest>.1.zip, <dest>.2.zip ... once split."""
+    single = f"{mod['dest']}.zip"
+    if os.path.exists(os.path.join(ROOT, single)):
+        return [single]
+
+    parts = []
+    while os.path.exists(os.path.join(ROOT, f"{mod['dest']}.{len(parts) + 1}.zip")):
+        parts.append(f"{mod['dest']}.{len(parts) + 1}.zip")
+
+    if not parts:
+        raise SystemExit(f"no release zip for {mod['dest']}: run pack_upload.sh --no-upload first")
+
+    return parts
+
+
+def size_mb(paths):
+    return round(sum(os.path.getsize(path) for path in paths) / 1024 ** 2)
+
+
+def catalog_entry(mod):
+    dest_dir = os.path.join(ROOT, mod["dest"])
+    if not os.path.isdir(dest_dir):
+        raise SystemExit(f"tree not built: {mod['dest']}")
+
+    zips = release_zips(mod)
+    config = mod["config"]
+    tree_files = (os.path.join(current, name) for current, _dirs, names in os.walk(dest_dir) for name in names)
+
+    return {
+        "id": mod["catalog"]["id"],
+        "baseGame": BASE_PROFILES[config["baseGame"]],
+        "displayName": config["displayName"],
+        "shortName": mod["catalog"]["shortName"],
+        "theme": mod["catalog"]["theme"],
+        "dirName": mod["dest"].removeprefix("GO_Mac_Mod_"),
+        "packageVersion": config["packageVersion"],
+        "urls": [f"{RELEASE_BASE}/{name}" for name in zips],
+        "downloadSizeMB": size_mb(os.path.join(ROOT, name) for name in zips),
+        "diskSizeMB": size_mb(tree_files),
+        "markers": catalog_markers(mod),
+    }
+
+
+def write_catalog():
+    """public/api/mods.json of the site: the launcher's mod list, in switcher order."""
+    if not os.path.isdir(os.path.dirname(CATALOG)):
+        raise SystemExit(f"site repository not found: {os.path.dirname(CATALOG)}")
+
+    catalog = {"version": 1, "mods": [catalog_entry(mod) for mod in MODS]}
+    with open(CATALOG, "w") as handle:
+        json.dump(catalog, handle, indent=2)
+        handle.write("\n")
+
+    print(f"==> {os.path.relpath(CATALOG, ROOT)}: {len(MODS)} mods")
 
 
 def write_contrax_parts(names):
@@ -800,6 +887,10 @@ def selected_mods():
 
 
 def main():
+    if EMIT_CATALOG:
+        write_catalog()
+        return
+
     if DRY_RUN:
         print("(dry run: nothing is written)\n")
 
