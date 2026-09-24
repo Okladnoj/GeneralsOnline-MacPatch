@@ -32,10 +32,11 @@ TARGETS = [a for a in sys.argv[1:] if not a.startswith("-")]
 
 
 class Archive:
-    def __init__(self, layer_dir, original, name):
+    def __init__(self, layer_dir, original, name, rank=None):
         self.layer_dir = layer_dir
         self.original = original
         self.name = name
+        self.rank = rank or original
 
     @property
     def source(self):
@@ -83,6 +84,37 @@ def control_bar_pro_layer():
     return [
         Archive("ControlBarPro_Contra_v2_1_1",
                 "!!!!!!!!!ControlBarPro_Contra.big", "ControlBarPro_Contra"),
+    ]
+
+
+CONTROL_BAR_PRO_ZH = "ControlBarProZH_v1.2_1920x1080"
+
+
+def control_bar_pro_zh_layer():
+    originals = [f"340_ControlBarPro{part}.big" for part in ("ZH", "1080ZH", "Data1080ZH", "Art1080ZH")]
+    return [
+        Archive(CONTROL_BAR_PRO_ZH, original, original[4:-4], rank="!" * 10 + original)
+        for original in originals
+    ]
+
+
+CONTRA008_TREE = os.path.relpath(os.path.join(ROOT, "GO_Mac_Mod_Contra008"), SRC)
+
+
+def control_bar_pro_18_buttons_layer():
+    contra = control_bar_pro_layer()[0]
+    return [
+        Archive(CONTRA008_TREE, f"00_{contra.name}.big", contra.name, rank=contra.original),
+    ]
+
+
+PATCH_ASSETS = os.path.relpath(os.path.join(ROOT, "GO_Mac_Patch", "Assets"), SRC)
+
+
+def control_bar_hd_layer():
+    return [
+        Archive(PATCH_ASSETS, f"400_ControlBarHD{part}ZH.big", f"ControlBarHD{part}ZH")
+        for part in ("Base", "English")
     ]
 
 
@@ -156,6 +188,40 @@ def contrax_layers():
             Archive(p1, "!!ContraXBeta2_DisableFogEffects.ctr", "DisableFogEffects"),
         ],
     ]
+
+
+CONTRAX_TREE = os.path.relpath(os.path.join(ROOT, "GO_Mac_Mod_ContraX"), SRC)
+
+
+def contrax_brutal_layers():
+    merged = {a.original: a for layer in contrax_layers() for a in layer}
+    built = [f"{i:02d}_{merged[key].name}.big" for i, key in enumerate(sorted(merged))]
+    return [
+        [Archive(CONTRAX_TREE, name, name[3:-4]) for name in built],
+        [
+            Archive(".", "!!!!!ContraXBeta2Patch1BossReplacerv_2.1.13.big", "BossReplacer"),
+        ],
+    ]
+
+
+def loose_files(source, dest):
+    root = os.path.join(SRC, source)
+    if not os.path.isdir(root):
+        return [(source, dest)]
+
+    return [
+        (os.path.join(source, relative), os.path.join(dest, relative))
+        for current, _dirs, names in sorted(os.walk(root))
+        for relative in sorted(os.path.relpath(os.path.join(current, name), root) for name in names)
+        if os.path.basename(relative) not in Tree.SKIP_NAMES
+    ]
+
+
+TEOD_MOVIES = [
+    f"Comp_{general}Gen_{variant}000.bik"
+    for general in ("Air", "Demol", "Infantry", "Laser", "Nuke", "Stealth", "Super", "Tank", "Thrax")
+    for variant in ("", "inv_")
+] + [f"{portrait}{side}.bik" for portrait in ("haf", "ruaf", "smf") for side in ("L", "R")]
 
 
 def shockwave_layers():
@@ -501,6 +567,191 @@ MODS = [
             "approxSizeMB": 1230,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_Old_Boss_R3",
+        "assets": "Old_Boss_R3",
+        "catalog": {"id": "m_old_boss_r3", "shortName": "OLD BOSS R3", "theme": "contra"},
+        "layers": [
+            [
+                Archive(".", "0Boss Generals.big", "BossGenerals"),
+            ],
+            control_bar_pro_zh_layer(),
+        ],
+        "extras": [
+            ("Old_Boss_R3/Install_Final.bmp", "Install_Final.bmp"),
+        ],
+        "unpacked": [
+            ("0Boss Generals.big", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "old-boss-r3",
+            "displayName": "Old Boss R3",
+            "version": "R3",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Boss Generals R3 (Boss, CTF and AoD modes) + Control Bar Pro 1.2, curated for macOS",
+            "author": "MaD-X Game and Mod Design / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 425,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_NProject",
+        "assets": "NProject",
+        "catalog": {"id": "m_nproject", "shortName": "NPROJECT", "theme": "contra"},
+        "layers": [
+            [
+                Archive("n5p29-nprojectbeta-v211", "!npm_art.big", "Art"),
+                Archive("n5p29-nprojectbeta-v211", "!npm_art2.big", "Art2"),
+                Archive("n5p29-nprojectbeta-v211", "!npm_art3.big", "Art3"),
+                Archive("n5p29-nprojectbeta-v211", "!npm_audio.big", "Audio"),
+                Archive("n5p29-nprojectbeta-v211", "!npm_data.big", "Data"),
+                Archive("n5p29-nprojectbeta-v211", "!npm_maps.big", "Maps"),
+            ],
+            control_bar_pro_zh_layer(),
+        ],
+        "extras": [
+            ("n5p29-nprojectbeta-v211/Install_Final.bmp", "Install_Final.bmp"),
+            ("n5p29-nprojectbeta-v211/00000000.016", "00000000.016"),
+            ("n5p29-nprojectbeta-v211/00000000.256", "00000000.256"),
+        ],
+        "unpacked": [
+            ("n5p29-nprojectbeta-v211/!npm_data.big", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "nproject",
+            "displayName": "NProject",
+            "version": "2.11",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "NProject 2.11 (bug fixes, rebalance, playable Boss General with AI) + Control Bar Pro 1.2, curated for macOS",
+            "author": "n5p29 (Enlima29) / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 650,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_ContraX_Brutal",
+        "assets": "ContraX_Brutal",
+        "catalog": {"id": "m_contrax_brutal", "shortName": "CONTRA X BRUTAL", "theme": "contra"},
+        "layers": contrax_brutal_layers(),
+        "extras": [
+            (f"{CONTRAX_TREE}/GenArial.ttf", "GenArial.ttf"),
+            (f"{CONTRAX_TREE}/Install_Final.bmp", "Install_Final.bmp"),
+            ("ContraX_Brutal/!ReplacerPatch1Fix.ini", "Data/INI/Object/!ReplacerPatch1Fix.ini"),
+            ("ContraX_Brutal/Generals.str", "Data/Generals.str"),
+        ],
+        "overrides": [],
+        "parts": [
+            ["config.json", "GenArial.ttf", "Install_Final.bmp", "Data",
+             "00_BossReplacer.big", "01_CameosHD.big", "02_ControlBarPro.big", "04_Patch1.big",
+             "13_Textures.big", "16_Window.big"],
+            ["03_DisableFogEffects.big", "05_AI.big", "06_Audio.big", "07_GameData.big",
+             "09_INI.big", "11_MusicEnhanced.big"],
+            ["08_HotkeysOriginal_English.big", "10_Maps.big", "12_Terrain.big",
+             "14_UnitVoicesEnglish.big", "15_W3D.big"],
+        ],
+        "config": {
+            "id": "contrax-brutal",
+            "displayName": "Contra X Brutal",
+            "version": "x-beta2-p1-boss2.1.13-fix1",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Curated Contra X Beta 2 + Patch 1 + Boss Replacer 2.1.13 with the Patch 1 definitions it dropped restored (EN, Enhanced music, Control Bar Pro)",
+            "author": "Contra Mod Team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 2400,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_TEOD",
+        "assets": "TEOD",
+        "catalog": {"id": "m_teod", "shortName": "THE END OF DAYS", "theme": "contra"},
+        "layers": [
+            [
+                Archive("MODDB_Ver11", "!TEOD_English.big", "English"),
+                Archive("MODDB_Ver11", "!TEOD_INI.big", "INI"),
+                Archive("MODDB_Ver11", "!TEOD_Maps.big", "Maps"),
+                Archive("MODDB_Ver11", "!TEOD_Music.big", "Music"),
+                Archive("MODDB_Ver11", "!TEOD_Sounds.big", "Sounds"),
+                Archive("MODDB_Ver11", "!TEOD_Speech.big", "Speech"),
+                Archive("MODDB_Ver11", "!TEOD_Terrain.big", "Terrain"),
+                Archive("MODDB_Ver11", "!TEOD_Textures.big", "Textures"),
+                Archive("MODDB_Ver11", "!TEOD_Voices.big", "Voices"),
+                Archive("MODDB_Ver11", "!TEOD_W3D.big", "W3D"),
+                Archive("MODDB_Ver11", "!TEOD_Window.big", "Window"),
+            ],
+        ],
+        "extras": [
+            ("MODDB_Ver11/Install_Final.bmp", "Install_Final.bmp"),
+            ("MODDB_Ver11/Data/English/generals.csf", "Data/English/generals.csf"),
+            ("MODDB_Ver11/Data/Scripts/MultiplayerScripts.scb", "Data/Scripts/MultiplayerScripts.scb"),
+            ("MODDB_Ver11/Data/Scripts/Scripts.ini", "Data/Scripts/Scripts.ini"),
+            ("MODDB_Ver11/Data/Scripts/SkirmishScripts.scb", "Data/Scripts/SkirmishScripts.scb"),
+        ] + [(f"MODDB_Ver11/Data/English/Movies/{movie}", f"Data/English/Movies/{movie}") for movie in TEOD_MOVIES],
+        "overrides": [],
+        "config": {
+            "id": "teod",
+            "displayName": "The End of Days",
+            "version": "11",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "The End of Days Ver 11 (Russia faction, subfactions bought in-game), curated for macOS",
+            "author": "The End of Days Team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1100,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_OFS",
+        "assets": "OFS",
+        "catalog": {"id": "m_ofs", "shortName": "OPERATION FIRESTORM", "theme": "contra"},
+        "layers": [
+            [
+                Archive("OFS_Beta02_EasyInstall", "!OFS_Art.big", "Art"),
+                Archive("OFS_Beta02_EasyInstall", "!OFS_Audio.big", "Audio"),
+                Archive("OFS_Beta02_EasyInstall", "!OFS_English.big", "English"),
+                Archive("OFS_Beta02_EasyInstall", "!OFS_INI.big", "INI"),
+                Archive("OFS_Beta02_EasyInstall", "!OFS_WindowWide.big", "WindowWide"),
+            ],
+            [
+                Archive("OFS_Beta02_Patch01/OFS_Patch_0.2.1_ENGLISH", "!!OFS_PATCH.big", "Patch"),
+            ],
+            control_bar_pro_18_buttons_layer(),
+            control_bar_hd_layer(),
+        ],
+        "extras": [
+            ("OFS_Beta02_EasyInstall/Install_Final.bmp", "Install_Final.bmp"),
+            ("OFS_Beta02_EasyInstall/Data/Scripts/MultiplayerScripts.scb", "Data/Scripts/MultiplayerScripts.scb"),
+            ("OFS_Beta02_EasyInstall/Data/Scripts/Scripts.ini", "Data/Scripts/Scripts.ini"),
+            ("OFS_Beta02_EasyInstall/Data/Scripts/SkirmishScripts.scb", "Data/Scripts/SkirmishScripts.scb"),
+            ("OFS/AmericaTechGeneral.ini", "Data/INI/ControlBarScheme/AmericaTechGeneral.ini"),
+        ] + loose_files("OFS_Beta02_Mappack/OFS_Maps", "Maps"),
+        "overrides": [],
+        "config": {
+            "id": "ofs",
+            "displayName": "Operation Firestorm",
+            "version": "0.2.1",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Operation: Firestorm Beta 02 + Patch 0.2.1 (EN) + map pack + Control Bar Pro 2.1.1 (18 buttons) + Control Bar HD, curated for macOS",
+            "author": "Operation: Firestorm Team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 400,
+        },
+    },
 ]
 
 
@@ -511,7 +762,7 @@ def resolve_layers(layers):
         for archive in layer:
             merged[archive.original] = archive
 
-    return [merged[key] for key in sorted(merged)]
+    return sorted(merged.values(), key=lambda archive: archive.rank)
 
 
 def link(src, dest):
