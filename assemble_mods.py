@@ -664,7 +664,7 @@ MODS = [
             "id": "contrax-brutal",
             "displayName": "Contra X Brutal",
             "version": "x-beta2-p1-boss2.1.13-fix1",
-            "packageVersion": 1,
+            "packageVersion": 2,
             "baseGame": "zh",
             "online": True,
             "maskBaseScripts": True,
