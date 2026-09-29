@@ -13,6 +13,7 @@ Local edits (custom splash screens, patched textures) live in assets/<mod>/ and 
 applied after the archives are linked, so re-running this script never loses them.
 """
 
+import hashlib
 import json
 import os
 import shutil
@@ -23,6 +24,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "downloads", "files")
 ASSETS = os.path.join(ROOT, "assets")
 CATALOG = os.path.join(ROOT, "..", "general_online_zh", "public", "api", "mods.json")
+SITE_ARTWORK = os.path.join(os.path.dirname(CATALOG), "mods")
+ARTWORK_KINDS = ("banner", "medallion")
 RELEASE_BASE = "https://github.com/Okladnoj/GeneralsOnline-MacPatch/releases/latest/download"
 BASE_PROFILES = {"zh": "z_generals"}
 
@@ -990,7 +993,28 @@ def catalog_entry(mod):
         "downloadSizeMB": size_mb(os.path.join(ROOT, name) for name in zips),
         "diskSizeMB": size_mb(tree_files),
         "markers": catalog_markers(mod),
+        **publish_artwork(mod),
     }
+
+
+def publish_artwork(mod):
+    """assets/<mod>/banner.png and medallion.png go to the site under a content hash, so a new picture gets a new URL."""
+    published = {}
+    for kind in ARTWORK_KINDS:
+        source = os.path.join(ASSETS, mod["dest"].removeprefix("GO_Mac_Mod_"), f"{kind}.png")
+        if not os.path.isfile(source):
+            continue
+
+        with open(source, "rb") as handle:
+            digest = hashlib.sha256(handle.read()).hexdigest()[:12]
+
+        relative = f"mods/{mod['catalog']['id']}/{kind}-{digest}.png"
+        destination = os.path.join(os.path.dirname(CATALOG), relative)
+        os.makedirs(os.path.dirname(destination), exist_ok=True)
+        shutil.copyfile(source, destination)
+        published[kind] = relative
+
+    return published
 
 
 def write_catalog():
@@ -998,6 +1022,7 @@ def write_catalog():
     if not os.path.isdir(os.path.dirname(CATALOG)):
         raise SystemExit(f"site repository not found: {os.path.dirname(CATALOG)}")
 
+    shutil.rmtree(SITE_ARTWORK, ignore_errors=True)
     catalog = {"version": 1, "mods": [catalog_entry(mod) for mod in MODS]}
     with open(CATALOG, "w") as handle:
         json.dump(catalog, handle, indent=2)
