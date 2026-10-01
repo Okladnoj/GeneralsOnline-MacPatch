@@ -16,6 +16,7 @@ applied after the archives are linked, so re-running this script never loses the
 import hashlib
 import json
 import os
+import re
 import shutil
 import struct
 import sys
@@ -79,6 +80,66 @@ class Tree:
 
                 relative = name if relative_dir == "." else os.path.join(relative_dir, name)
                 yield os.path.join(current, name), self.rename.get(relative, relative)
+
+
+class Overlay:
+    """Loose files a whole Windows install lays over the archives it loads.
+
+    WW3 ships as a complete Zero Hour folder: the mod's archives plus some 25 000 loose
+    files, most of them byte for byte copies of entries those archives already hold. A
+    loose file is kept only when it changes what the engine reads - it is new, or it
+    differs from the archive entry that would win without it. Paths the engine never
+    reads (editor molds, the author's backups) are listed in skip.
+    """
+
+    def __init__(self, source, dirs, shadowing, skip=()):
+        self.source = source
+        self.dirs = dirs
+        self.shadowing = shadowing
+        self.skip = [re.compile(pattern, re.IGNORECASE) for pattern in skip]
+
+    def files(self):
+        """Yields (absolute source, path relative to the mod root)."""
+        root = os.path.join(SRC, self.source)
+        winners = self.winning_entries(root)
+
+        for directory in self.dirs:
+            for current, dirs, names in os.walk(os.path.join(root, directory)):
+                dirs.sort()
+
+                for name in sorted(names):
+                    path = os.path.join(current, name)
+                    relative = os.path.relpath(path, root)
+                    if self.is_skipped(relative) or self.is_shadowed(path, relative, winners):
+                        continue
+
+                    yield path, relative
+
+    def winning_entries(self, root):
+        winners = {}
+        for archive in self.shadowing:
+            archive_path = os.path.join(root, archive)
+            for name, offset, size in big_entries(archive_path):
+                winners.setdefault(name.lower().replace("/", "\\"), (archive_path, offset, size))
+
+        return winners
+
+    def is_skipped(self, relative):
+        return any(pattern.fullmatch(relative) for pattern in self.skip)
+
+    @staticmethod
+    def is_shadowed(path, relative, winners):
+        entry = winners.get(relative.lower().replace("/", "\\"))
+        if entry is None:
+            return False
+
+        archive_path, offset, size = entry
+        if size != os.path.getsize(path):
+            return False
+
+        with open(archive_path, "rb") as archive, open(path, "rb") as loose:
+            archive.seek(offset)
+            return archive.read(size) == loose.read()
 
 
 # Unofficial Control Bar Pro 2.1.1 rebuilt for Contra by Hojjat. Nine leading '!' put it
@@ -287,6 +348,31 @@ def rotr_layers():
             Archive(".", "!!!!!ROTR_ControlBarPro.gib", "ControlBarPro_RotR"),
         ],
     ]
+
+
+WW3_ARCHIVES = [f"00PMBeta{number}.big" for number in range(993, 1000)]
+ZH_ARCHIVES = [
+    "AudioEnglishZH.big", "AudioZH.big", "EnglishZH.big", "GensecZH.big", "INIZH.big",
+    "MapsZH.big", "Music.big", "MusicZH.big", "ShadersZH.big", "SpeechEnglishZH.big",
+    "SpeechZH.big", "TerrainZH.big", "TexturesZH.big", "W3DEnglishZH.big", "W3DZH.big",
+    "WindowZH.big",
+]
+
+
+def ww3_overlay():
+    return Overlay(
+        "WW3_Mod",
+        dirs=["Art", "Audio", "Data", "Maps", "Window"],
+        shadowing=WW3_ARCHIVES + ZH_ARCHIVES,
+        skip=[
+            r"Data/Editor/.+",
+            r"Data/Scripts/.+/.+",
+            r"Data/English/(?!generals\.csf$).+",
+            r"Data/Audio/Sounds/rus-.+\.wav",
+            r"Maps/[^/]+\.ini",
+            r".+\.(txt|lnk)",
+        ],
+    )
 
 
 MODS = [
@@ -798,6 +884,46 @@ MODS = [
             "approxSizeMB": 1100,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_WW3",
+        "assets": "WW3",
+        "catalog": {"id": "m_ww3", "shortName": "WORLD WAR 3", "theme": "contra"},
+        "layers": [
+            [Archive("WW3_Mod", original, original[2:-4]) for original in WW3_ARCHIVES],
+            control_bar_pro_zh_layer(),
+        ],
+        "overlay": ww3_overlay(),
+        "extras": [
+            ("WW3_Mod/Install_Final.bmp", "Install_Final.bmp"),
+        ],
+        "scheme_aliases": {
+            "America8x6": ["Germany", "Japan", "SouthKorea", "Israel", "UK", "France"],
+            "China8x6": ["Russia", "NorthKorea", "India"],
+            "GLA8x6": ["Iraq", "Pakistan"],
+        },
+        "overrides": [],
+        "parts": [
+            ["config.json", "Install_Final.bmp", "00_ControlBarPro1080ZH.big",
+             "01_ControlBarProArt1080ZH.big", "02_ControlBarProData1080ZH.big",
+             "03_ControlBarProZH.big", "04_PMBeta993.big"],
+            ["06_PMBeta995.big", "07_PMBeta996.big", "08_PMBeta997.big", "09_PMBeta998.big",
+             "10_PMBeta999.big"],
+            ["05_PMBeta994.big", "Art", "Data", "Maps", "Window"],
+        ],
+        "config": {
+            "id": "ww3",
+            "displayName": "World War 3 (Peace Mission Mod)",
+            "version": "2024.05",
+            "packageVersion": 2,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "World War 3, a sub-mod of Peace Mission: 14 modern factions + Control Bar Pro 1.2, curated for macOS",
+            "author": "nappyhairdo; Peace Mission by Lee Shin Fox / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 4600,
+        },
+    },
 ]
 
 
@@ -859,27 +985,60 @@ def apply_override(archive_path, entry_name, payload_path):
     raise SystemExit(f"override target not found in archive: {entry_name}")
 
 
-def extract_entry(archive_path, entry_name, dest):
+def read_entry(archive_path, entry_name):
     for name, offset, size in big_entries(archive_path):
         if name.lower() != entry_name.lower():
             continue
 
         with open(archive_path, "rb") as handle:
             handle.seek(offset)
-            payload = handle.read(size)
-
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        with open(dest, "wb") as handle:
-            handle.write(payload)
-        return
+            return handle.read(size)
 
     raise SystemExit(f"entry not found in archive: {entry_name}")
+
+
+def extract_entry(archive_path, entry_name, dest):
+    payload = read_entry(archive_path, entry_name)
+
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "wb") as handle:
+        handle.write(payload)
+
+
+def write_scheme_aliases(aliases, dest):
+    """Control Bar Pro ships schemes for the stock sides only, and a side without one falls
+    back to "Default", which no mod defines. Every other side of the mod gets a copy of a stock
+    scheme under its own name; the engine reads Data/INI/ControlBarScheme/ after the main file.
+    """
+    archive_path = os.path.join(SRC, CONTROL_BAR_PRO_ZH, "340_ControlBarProData1080ZH.big")
+    text = read_entry(archive_path, "Data\\INI\\ControlBarScheme.ini").decode("latin-1").replace("\r\n", "\n")
+    stock = {m.group(1): m.group(0) for m in re.finditer(r"(?ms)^ControlBarScheme\s+(\S+)\n.*?^End\s*$", text)}
+
+    copies = []
+    for scheme, sides in aliases.items():
+        for side in sides:
+            copy = re.sub(r"(?m)^ControlBarScheme\s+\S+", f"ControlBarScheme {side}8x6", stock[scheme], count=1)
+            copy = re.sub(r"(?m)^(\s*Side\s*=?\s*)\S+", lambda m: m.group(1) + side, copy, count=1)
+            copies.append(copy)
+
+    if DRY_RUN:
+        return len(copies)
+
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "w", newline="\r\n") as handle:
+        handle.write("\n\n".join(copies) + "\n")
+
+    return len(copies)
 
 
 def missing_sources(mod):
     tree = mod.get("tree")
     if tree and not os.path.isdir(os.path.join(SRC, tree.source)):
         return f"downloads/files/{tree.source}/"
+
+    overlay = mod.get("overlay")
+    if overlay and not os.path.isdir(os.path.join(SRC, overlay.source)):
+        return f"downloads/files/{overlay.source}/"
 
     for archive in resolve_layers(mod["layers"]):
         if not os.path.exists(archive.source):
@@ -942,6 +1101,14 @@ def build(mod):
         print(f"    {filename:<34} <- {archive.layer_dir}/{archive.original}")
         link(archive.source, os.path.join(dest_dir, filename))
 
+    overlay = mod.get("overlay")
+    if overlay:
+        loose = 0
+        for source, relative in overlay.files():
+            loose += 1
+            link(source, os.path.join(dest_dir, relative))
+        print(f"    {loose} loose files <- downloads/files/{overlay.source}/")
+
     for source, relative in mod["extras"]:
         override = os.path.join(asset_dir, os.path.basename(relative))
         if os.path.exists(override):
@@ -956,6 +1123,12 @@ def build(mod):
         print(f"    {relative:<34} <- {source} :: {entry_name}")
         if not DRY_RUN:
             extract_entry(os.path.join(SRC, source), entry_name, os.path.join(dest_dir, relative))
+
+    scheme_aliases = mod.get("scheme_aliases")
+    if scheme_aliases:
+        relative = f"Data/INI/ControlBarScheme/{mod['assets']}Sides.ini"
+        count = write_scheme_aliases(scheme_aliases, os.path.join(dest_dir, relative))
+        print(f"    {relative:<34} <- {count} Control Bar Pro schemes for the mod's own sides")
 
     for archive_name, entry_name, asset_relative in mod["overrides"]:
         target = next(n for n in names if n.endswith(f"_{archive_name}.big"))
