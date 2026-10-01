@@ -1,7 +1,7 @@
 #!/bin/bash
 # Pack local trees into release zips and upload to GitHub.
 #
-# Trees: GO_Mac_Patch/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS/
+# Trees: GO_Mac_Patch/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2/
 # Split mods ship numbered parts: ContraX → .{1,2,3}.zip (contrax_parts.sh),
 # Silent_Death → .{1,2,3,4}.zip (silent_death_parts.sh),
 # ContraX_Brutal → .{1,2,3}.zip (contrax_brutal_parts.sh).
@@ -32,16 +32,16 @@ for arg in "$@"; do
     --no-upload) UPLOAD=0 ;;
     --upload) UPLOAD=1 ;;
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2)
 fi
 
 status=0
@@ -185,7 +185,7 @@ pack_parts() {
 for t in "${TARGETS[@]}"; do
   case "$t" in
     Patch) pack_dir GO_Mac_Patch GO_Mac_Patch.zip 0 ;;
-    Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR|Old_Boss_R3|NProject|TEOD|OFS) pack_dir "GO_Mac_Mod_$t" "GO_Mac_Mod_$t.zip" 1 ;;
+    Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR|Old_Boss_R3|NProject|TEOD|OFS|Blitz2) pack_dir "GO_Mac_Mod_$t" "GO_Mac_Mod_$t.zip" 1 ;;
     ContraX) pack_contrax_parts ;;
     Silent_Death) pack_parts GO_Mac_Mod_Silent_Death SILENT_DEATH 4 ;;
     ContraX_Brutal) pack_parts GO_Mac_Mod_ContraX_Brutal CONTRAX_BRUTAL 3 ;;

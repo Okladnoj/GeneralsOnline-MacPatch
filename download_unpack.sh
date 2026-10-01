@@ -16,16 +16,16 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2)
 fi
 
 download_unzip() {
@@ -69,7 +69,7 @@ for t in "${TARGETS[@]}"; do
     Patch)
       download_unzip GO_Mac_Patch.zip GO_Mac_Patch
       ;;
-    Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR|Old_Boss_R3|NProject|TEOD|OFS)
+    Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR|Old_Boss_R3|NProject|TEOD|OFS|Blitz2)
       download_unzip "GO_Mac_Mod_$t.zip" "GO_Mac_Mod_$t"
       if [[ ! -f "GO_Mac_Mod_$t/config.json" ]]; then
         echo "missing GO_Mac_Mod_$t/config.json" >&2

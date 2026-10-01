@@ -756,6 +756,48 @@ MODS = [
             "approxSizeMB": 400,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_Blitz2",
+        "assets": "Blitz2",
+        "catalog": {"id": "m_blitz2", "shortName": "BLITZKRIEG II", "theme": "contra"},
+        "layers": [
+            [
+                Archive("BlitzR3", "BlitzArt.Blitz", "Art"),
+                Archive("BlitzR3", "BlitzAudio.Blitz", "Audio"),
+                Archive("BlitzR3", "BlitzEnglish.blitz", "English"),
+                Archive("BlitzR3", "BlitzGerman.blitz", "German"),
+                Archive("BlitzR3", "BlitzINI.blitz", "INI"),
+                Archive("BlitzR3", "BlitzMaps.blitz", "Maps"),
+                Archive("BlitzR3", "BlitzMissions.Blitz", "Missions"),
+                Archive("BlitzR3", "BlitzTerrain.Blitz", "Terrain"),
+                Archive("BlitzR3", "BlitzWindow.Blitz", "Window"),
+            ],
+            [
+                Archive("BlitzR3_301", "BlitzArt.Blitz", "Art"),
+                Archive("BlitzR3_301", "BlitzEnglish.blitz", "English"),
+                Archive("BlitzR3_301", "BlitzGerman.blitz", "German"),
+                Archive("BlitzR3_301", "BlitzINI.blitz", "INI"),
+                Archive("BlitzR3_301", "BlitzMaps.blitz", "Maps"),
+            ],
+        ],
+        "extras": [
+            ("BlitzR3/Install_Final.bmp", "Install_Final.bmp"),
+        ] + loose_files("BlitzR3/Data/Movies", "Data/Movies"),
+        "overrides": [],
+        "config": {
+            "id": "blitz2",
+            "displayName": "Blitzkrieg II: The Finest Hour",
+            "version": "3.01",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Blitzkrieg II: The Finest Hour R3 + official Patch 3.01 (EN, DE), curated for macOS",
+            "author": "Derelict Studios / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1100,
+        },
+    },
 ]
 
 
