@@ -1289,6 +1289,8 @@ def catalog_entry(mod):
 
 def publish_artwork(mod):
     """assets/<mod>/banner.png and medallion.png go to the site under a content hash, so a new picture gets a new URL."""
+    shutil.rmtree(os.path.join(SITE_ARTWORK, mod["catalog"]["id"]), ignore_errors=True)
+
     published = {}
     for kind in ARTWORK_KINDS:
         source = os.path.join(ASSETS, mod["dest"].removeprefix("GO_Mac_Mod_"), f"{kind}.png")
@@ -1312,13 +1314,41 @@ def write_catalog():
     if not os.path.isdir(os.path.dirname(CATALOG)):
         raise SystemExit(f"site repository not found: {os.path.dirname(CATALOG)}")
 
+    if TARGETS:
+        update_catalog(selected_mods())
+        return
+
     shutil.rmtree(SITE_ARTWORK, ignore_errors=True)
     catalog = {"version": 1, "mods": [catalog_entry(mod) for mod in MODS]}
+    save_catalog(catalog)
+
+    print(f"==> {os.path.relpath(CATALOG, ROOT)}: {len(MODS)} mods")
+
+
+def update_catalog(mods):
+    """Rewrite only the named mods' entries. Published mods keep theirs: their trees and zips are gone after cleanup."""
+    with open(CATALOG) as handle:
+        catalog = json.load(handle)
+
+    entries = {entry["id"]: entry for entry in catalog["mods"]}
+    for mod in mods:
+        entries[mod["catalog"]["id"]] = catalog_entry(mod)
+
+    switcher_order = [mod["catalog"]["id"] for mod in MODS]
+    catalog["mods"] = sorted(
+        entries.values(),
+        key=lambda entry: switcher_order.index(entry["id"]) if entry["id"] in switcher_order else len(switcher_order),
+    )
+    save_catalog(catalog)
+
+    names = ", ".join(mod["catalog"]["id"] for mod in mods)
+    print(f"==> {os.path.relpath(CATALOG, ROOT)}: updated {names}, {len(catalog['mods'])} mods")
+
+
+def save_catalog(catalog):
     with open(CATALOG, "w") as handle:
         json.dump(catalog, handle, indent=2)
         handle.write("\n")
-
-    print(f"==> {os.path.relpath(CATALOG, ROOT)}: {len(MODS)} mods")
 
 
 def write_contrax_parts(names):
