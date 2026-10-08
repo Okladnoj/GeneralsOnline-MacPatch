@@ -268,13 +268,14 @@ def contrax_brutal_layers():
     ]
 
 
-def loose_files(source, dest):
+def loose_files(source, dest, rename=None):
     root = os.path.join(SRC, source)
     if not os.path.isdir(root):
         return [(source, dest)]
 
+    rename = rename or {}
     return [
-        (os.path.join(source, relative), os.path.join(dest, relative))
+        (os.path.join(source, relative), os.path.join(dest, rename.get(relative, relative)))
         for current, _dirs, names in sorted(os.walk(root))
         for relative in sorted(os.path.relpath(os.path.join(current, name), root) for name in names)
         if os.path.basename(relative) not in Tree.SKIP_NAMES
@@ -286,6 +287,19 @@ TEOD_MOVIES = [
     for general in ("Air", "Demol", "Infantry", "Laser", "Nuke", "Stealth", "Super", "Tank", "Thrax")
     for variant in ("", "inv_")
 ] + [f"{portrait}{side}.bik" for portrait in ("haf", "ruaf", "smf") for side in ("L", "R")]
+
+
+SHW_MAP_PACK_RENAMES = {
+    "Arctic Base [SHW]/Central Station [SHW].map": "Arctic Base [SHW]/Arctic Base [SHW].map",
+    "Arctic Base [SHW]/Central Station [SHW].tga": "Arctic Base [SHW]/Arctic Base [SHW].tga",
+    "Arctic Base [SHW]/Central Station [SHW].wak": "Arctic Base [SHW]/Arctic Base [SHW].wak",
+    "Blood Match Stadium I [SHW]/Bloodmatch Stadium I [SHW].map": "Bloodmatch Stadium I [SHW]/Bloodmatch Stadium I [SHW].map",
+    "Blood Match Stadium I [SHW]/Bloodmatch Stadium I [SHW].tga": "Bloodmatch Stadium I [SHW]/Bloodmatch Stadium I [SHW].tga",
+    "Blood Match Stadium II [SHW]/Bloodmatch Stadium II [SHW].map": "Bloodmatch Stadium II [SHW]/Bloodmatch Stadium II [SHW].map",
+    "Blood Match Stadium II [SHW]/Bloodmatch Stadium II [SHW].tga": "Bloodmatch Stadium II [SHW]/Bloodmatch Stadium II [SHW].tga",
+    "Islands Hopping [SHW]/Islands Hopping [SHW].WAK": "Islands Hopping [SHW]/Islands Hopping [SHW].wak",
+    "The Valley of Kings [SHW]/The Valley of Kings [SHW].WAK": "The Valley of Kings [SHW]/The Valley of Kings [SHW].wak",
+}
 
 
 def shockwave_layers():
@@ -611,23 +625,24 @@ MODS = [
             ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA06_Final_00s.bik", "Data/Movies/USA06_Final_00s.bik"),
             ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA07_Final_00s.bik", "Data/Movies/USA07_Final_00s.bik"),
             ("Shockwave_Sinple_Player_Experience_2.1.3/Data/Movies/USA08_Final_00s.bik", "Data/Movies/USA08_Final_00s.bik"),
-        ],
+        ] + loose_files("ShwMapPack/extracted/Maps", "Maps", SHW_MAP_PACK_RENAMES),
         "unpacked": [
-            ("ShockWave_1.201/!Shw_ini.gib", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+            ("Shockwave_Sinple_Player_Experience_2.1.3/!Shw_ini.gib", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
         ],
+        "map_cache": ("Shockwave_Sinple_Player_Experience_2.1.3/!Shw_Challenge.gib", "MapCache.generated.ini"),
         "overrides": [],
         "config": {
             "id": "shockwave",
             "displayName": "ShockWave",
             "version": "1.201-hf6-spe2.1.3",
-            "packageVersion": 2,
+            "packageVersion": 3,
             "baseGame": "zh",
             "online": False,
             "maskBaseScripts": True,
-            "description": "ShockWave 1.201 + Hotfix v6 + Singleplayer Experience 2.1.3 (full campaigns, 12 challenges), curated for macOS",
+            "description": "ShockWave 1.201 + Hotfix v6 + Singleplayer Experience 2.1.3 (full campaigns, 12 challenges) + Official Map Pack (67 maps), curated for macOS",
             "author": "SWR Productions / curated for macOS",
             "bigGlob": "*.big",
-            "approxSizeMB": 1040,
+            "approxSizeMB": 1060,
         },
     },
     {
@@ -1031,6 +1046,47 @@ def write_scheme_aliases(aliases, dest):
     return len(copies)
 
 
+MAP_CACHE_ENTRY = re.compile(r"(?ms)^MapCache (\S+)\r?\n.*?^END\r?\n")
+
+
+def map_cache_key(name):
+    return re.sub(r"_([0-9a-fA-F]{2})", lambda m: chr(int(m.group(1), 16)), name).lower()
+
+
+def loose_map_keys(mod):
+    return {
+        relative.replace("/", "\\").lower()
+        for _source, relative in mod["extras"]
+        if relative.startswith("Maps/") and relative.lower().endswith(".map")
+    }
+
+
+def write_map_cache(mod, dest):
+    mod_cache_archive, generated_cache = mod["map_cache"]
+    loose_maps = loose_map_keys(mod)
+
+    generated = open(os.path.join(ASSETS, mod["assets"], generated_cache), encoding="latin-1").read()
+    loose_entries = [
+        entry.group(0).replace("\r\n", "\n")
+        for entry in MAP_CACHE_ENTRY.finditer(generated)
+        if map_cache_key(entry.group(1)) in loose_maps
+    ]
+    if len(loose_entries) != len(loose_maps):
+        raise SystemExit(
+            f"map cache: {len(loose_entries)} generated entries for {len(loose_maps)} loose maps")
+
+    if DRY_RUN:
+        return len(loose_entries)
+
+    mod_cache = read_entry(os.path.join(SRC, mod_cache_archive), "Maps\\MapCache.ini").decode("latin-1")
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "w", encoding="latin-1", newline="\r\n") as handle:
+        handle.write(mod_cache.replace("\r\n", "\n").rstrip("\n") + "\n\n")
+        handle.write("\n".join(loose_entries))
+
+    return len(loose_entries)
+
+
 def missing_sources(mod):
     tree = mod.get("tree")
     if tree and not os.path.isdir(os.path.join(SRC, tree.source)):
@@ -1052,6 +1108,14 @@ def missing_sources(mod):
     for source, _entry_name, _relative in mod.get("unpacked", []):
         if not os.path.exists(os.path.join(SRC, source)):
             return source
+
+    map_cache = mod.get("map_cache")
+    if map_cache:
+        mod_cache_archive, generated_cache = map_cache
+        if not os.path.exists(os.path.join(SRC, mod_cache_archive)):
+            return mod_cache_archive
+        if not os.path.exists(os.path.join(ASSETS, mod["assets"], generated_cache)):
+            return f"assets/{mod['assets']}/{generated_cache}"
 
     return None
 
@@ -1129,6 +1193,12 @@ def build(mod):
         relative = f"Data/INI/ControlBarScheme/{mod['assets']}Sides.ini"
         count = write_scheme_aliases(scheme_aliases, os.path.join(dest_dir, relative))
         print(f"    {relative:<34} <- {count} Control Bar Pro schemes for the mod's own sides")
+
+    map_cache = mod.get("map_cache")
+    if map_cache:
+        relative = "Maps/MapCache.ini"
+        count = write_map_cache(mod, os.path.join(dest_dir, relative))
+        print(f"    {relative:<34} <- {map_cache[0]} + {count} entries of assets/{mod['assets']}/{map_cache[1]}")
 
     for archive_name, entry_name, asset_relative in mod["overrides"]:
         target = next(n for n in names if n.endswith(f"_{archive_name}.big"))
