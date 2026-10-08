@@ -389,6 +389,34 @@ def ww3_overlay():
     )
 
 
+ZHE_ARCHIVES = [
+    "!ZHE8Audio_98.big", "!ZHE8Audio_99.big", "!ZHE8CameoHD_99.big", "!ZHE8INI_99.big",
+    "!ZHE8IUI_97.big", "!ZHE8Language_99.big", "!ZHE8Maps_99.big", "!ZHE8Music_99.big",
+    "!ZHE8Terrain_99.big", "!ZHE8UIFHD_99.big", "!ZHE8VM_99.big", "!ZHE8WTR_97.big",
+    "!ZHE8Windows_99.big",
+] + [f"!ZHE8W3D_{number}.big" for number in range(88, 100)] + [
+    f"!ZHE9Textures_{number}.big" for number in range(89, 100)
+]
+ZHE_HD_TEXTURES = [f"!ZHE8TexturesBaseHD_{number}.zhe" for number in range(95, 100)] + [
+    f"!ZHE8TexturesCivilianHD_{number}.zhe" for number in range(87, 100)
+]
+
+
+def zhe_archive(original):
+    """The mod's own launcher switches an option on by renaming its .zhe archive to .big."""
+    stem = os.path.splitext(original)[0]
+    return Archive("ZHE_BIG100a", original, stem.lstrip("!"), rank=f"{stem}.big")
+
+
+def zhe_layers():
+    return [
+        [zhe_archive(original) for original in ZHE_ARCHIVES + ZHE_HD_TEXTURES],
+        [
+            Archive(".", "!!ZHE8Patch_99.big", "ZHE8Patch_99"),
+        ],
+    ]
+
+
 MODS = [
     {
         "dest": "GO_Mac_Mod_Contra007",
@@ -938,6 +966,46 @@ MODS = [
             "author": "nappyhairdo; Peace Mission by Lee Shin Fox / curated for macOS",
             "bigGlob": "*.big",
             "approxSizeMB": 4600,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_ZHE",
+        "assets": "ZHE",
+        "catalog": {"id": "m_zhe", "shortName": "ZERO HOUR ENHANCED", "theme": "contra"},
+        "layers": zhe_layers(),
+        "extras": [
+            ("ZHE_BIG100a/Install_Final.bmp", "Install_Final.bmp"),
+            ("ZHE_BIG100a/Karisma.ttf", "Karisma.ttf"),
+            ("ZHE_BIG100a/Data/Movies/Intro.bik", "Data/Movies/Intro.bik"),
+        ] + loose_files("ZHE_BIG100a/Data/Scripts", "Data/Scripts"),
+        "overrides": [],
+        "parts": [
+            ["config.json", "Install_Final.bmp", "Karisma.ttf", "Data",
+             "00_ZHE8Patch_99.big", "02_ZHE8Audio_99.big", "03_ZHE8CameoHD_99.big",
+             "04_ZHE8INI_99.big", "05_ZHE8IUI_97.big", "06_ZHE8Language_99.big",
+             "07_ZHE8Maps_99.big", "09_ZHE8Terrain_99.big"]
+            + [f"{index}_ZHE8TexturesBaseHD_{number}.big" for index, number in zip(range(10, 15), range(95, 100))]
+            + ["28_ZHE8UIFHD_99.big", "29_ZHE8VM_99.big"]
+            + [f"{index}_ZHE8W3D_{number}.big" for index, number in zip(range(30, 42), range(88, 100))]
+            + ["42_ZHE8WTR_97.big", "43_ZHE8Windows_99.big"]
+            + [f"{index}_ZHE9Textures_{number}.big" for index, number in zip(range(44, 55), range(89, 100))],
+            ["08_ZHE8Music_99.big"]
+            + [f"{index}_ZHE8TexturesCivilianHD_{number}.big" for index, number in zip(range(15, 22), range(87, 94))],
+            ["01_ZHE8Audio_98.big"]
+            + [f"{index}_ZHE8TexturesCivilianHD_{number}.big" for index, number in zip(range(22, 28), range(94, 100))],
+        ],
+        "config": {
+            "id": "zhe",
+            "displayName": "Zero Hour Enhanced",
+            "version": "1.0.0a-2024.03.28",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Zero Hour Enhanced 1.0.0a + patch of 28.03.2024 (EN, HD textures, Restrained AI), curated for macOS",
+            "author": "VectorIV / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 5520,
         },
     },
 ]

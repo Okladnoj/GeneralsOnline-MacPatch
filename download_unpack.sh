@@ -16,16 +16,16 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE)
 fi
 
 download_unzip() {
@@ -102,6 +102,9 @@ for t in "${TARGETS[@]}"; do
       ;;
     WW3)
       download_parts GO_Mac_Mod_WW3 3
+      ;;
+    ZHE)
+      download_parts GO_Mac_Mod_ZHE 3
       ;;
   esac
 done

@@ -1,11 +1,12 @@
 #!/bin/bash
 # Pack local trees into release zips and upload to GitHub.
 #
-# Trees: GO_Mac_Patch/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3/
+# Trees: GO_Mac_Patch/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE/
 # Split mods ship numbered parts: ContraX → .{1,2,3}.zip (contrax_parts.sh),
 # Silent_Death → .{1,2,3,4}.zip (silent_death_parts.sh),
 # ContraX_Brutal → .{1,2,3}.zip (contrax_brutal_parts.sh),
-# WW3 → .{1,2,3}.zip (ww3_parts.sh).
+# WW3 → .{1,2,3}.zip (ww3_parts.sh),
+# ZHE → .{1,2,3}.zip (zhe_parts.sh).
 #
 # Usage:
 #   ./pack_upload.sh                  # everything, pack + upload
@@ -23,6 +24,8 @@ source ./silent_death_parts.sh
 source ./contrax_brutal_parts.sh
 # shellcheck source=ww3_parts.sh
 source ./ww3_parts.sh
+# shellcheck source=zhe_parts.sh
+source ./zhe_parts.sh
 
 REPO="${REPO:-Okladnoj/GeneralsOnline-MacPatch}"
 TAG="${TAG:-v1.0}"
@@ -35,16 +38,16 @@ for arg in "$@"; do
     --no-upload) UPLOAD=0 ;;
     --upload) UPLOAD=1 ;;
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3)" >&2
+      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3)
+  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE)
 fi
 
 status=0
@@ -193,6 +196,7 @@ for t in "${TARGETS[@]}"; do
     Silent_Death) pack_parts GO_Mac_Mod_Silent_Death SILENT_DEATH 4 ;;
     ContraX_Brutal) pack_parts GO_Mac_Mod_ContraX_Brutal CONTRAX_BRUTAL 3 ;;
     WW3) pack_parts GO_Mac_Mod_WW3 WW3 3 ;;
+    ZHE) pack_parts GO_Mac_Mod_ZHE ZHE 3 ;;
   esac
 done
 
