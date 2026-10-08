@@ -842,12 +842,13 @@ MODS = [
             ("OFS/AmericaTechGeneral.ini", "Data/INI/ControlBarScheme/AmericaTechGeneral.ini"),
             ("OFS/MainMenu.wnd", "Window/Menus/MainMenu.wnd"),
         ] + loose_files("OFS_Beta02_Mappack/OFS_Maps", "Maps"),
+        "map_cache": ("Generals Zero Hour/MapsZH.big", "MapCache.generated.ini"),
         "overrides": [],
         "config": {
             "id": "ofs",
             "displayName": "Operation Firestorm",
             "version": "0.2.1",
-            "packageVersion": 2,
+            "packageVersion": 3,
             "baseGame": "zh",
             "online": True,
             "maskBaseScripts": True,
@@ -1079,9 +1080,13 @@ def write_map_cache(mod, dest):
         return len(loose_entries)
 
     mod_cache = read_entry(os.path.join(SRC, mod_cache_archive), "Maps\\MapCache.ini").decode("latin-1")
+    mod_cache_without_loose_maps = MAP_CACHE_ENTRY.sub(
+        lambda entry: "" if map_cache_key(entry.group(1)) in loose_maps else entry.group(0),
+        mod_cache.replace("\r\n", "\n"))
+
     os.makedirs(os.path.dirname(dest), exist_ok=True)
     with open(dest, "w", encoding="latin-1", newline="\r\n") as handle:
-        handle.write(mod_cache.replace("\r\n", "\n").rstrip("\n") + "\n\n")
+        handle.write(mod_cache_without_loose_maps.rstrip("\n") + "\n\n")
         handle.write("\n".join(loose_entries))
 
     return len(loose_entries)
