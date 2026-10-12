@@ -1008,6 +1008,47 @@ MODS = [
             "approxSizeMB": 5520,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_Continue",
+        "assets": "Continue",
+        "catalog": {"id": "m_continue", "shortName": "CONTINUE", "theme": "contra"},
+        "layers": [
+            [
+                Archive("352continue", "!Continue35Art.big", "Art"),
+                Archive("352continue", "!Continue35INI.big", "INI"),
+                Archive("352continue", "!Continue35Map.big", "Map"),
+                Archive("352continue", "!Continue35Sound.big", "Sound"),
+                Archive("352continue", "!Continue35Terrain.big", "Terrain"),
+                Archive("352continue", "!Continue35windows.big", "Windows"),
+                Archive("352continue", "!0351Continueupdata.big", "Update351"),
+                Archive("352continue", "!!0352Continueupdata.big", "Update352"),
+            ],
+            control_bar_pro_18_buttons_layer(),
+        ],
+        "extras": [
+            ("352continue/Install_Final.bmp", "Install_Final.bmp"),
+            ("352continue/Data/generals.str", "Data/generals.str"),
+            ("Continue/QuitMenu.wnd", "Window/Menus/QuitMenu.wnd"),
+            ("Continue/QuitNoSave.wnd", "Window/Menus/QuitNoSave.wnd"),
+            ("Continue/QuitWindowPro_1024_1024.tga", "Art/Textures/QuitWindowPro_1024_1024.tga"),
+            ("Continue/ConSmShellUserInterface512_001.tga", "Art/Textures/ConSmShellUserInterface512_001.tga"),
+        ] + loose_files("352continue/Data/Scripts", "Data/Scripts")
+          + loose_files("352continue/Data/Movies", "Data/Movies"),
+        "overrides": [],
+        "config": {
+            "id": "continue",
+            "displayName": "Continue",
+            "version": "3.52",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Continue 3.52 (Russian faction, naval mode) + Control Bar Pro 2.1.1 (18 buttons), curated for macOS",
+            "author": "Generals Continue Production team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1740,
+        },
+    },
 ]
 
 
