@@ -417,6 +417,30 @@ def zhe_layers():
     ]
 
 
+GENERALS2_ARCHIVES = ("Data", "Patch1551")
+GENERALS2_CHINESE_TEXT = ("generals.csf", "Language.ini", "HeaderTemplate.ini")
+
+
+def generals2_layers():
+    return [
+        [
+            Archive("CCG2_155_CN", "!!CCG2 1.55a.big", "Art"),
+            Archive("CCG2_155_CN", "!!CCG2 1.55b.big", "Data"),
+            Archive("CCG2_1.55.11", "!!CCG2 1.55.1.big", "Patch1551"),
+        ],
+    ]
+
+
+def generals2_chinese_text():
+    """The Chinese build ships its strings and SimSun fonts as Data\\English; moved to
+    Data\\Chinese they serve Chinese players and leave English to the English patch."""
+    return [
+        (archive, f"Data\\English\\{name}", f"Data\\Chinese\\{name}")
+        for archive in GENERALS2_ARCHIVES
+        for name in GENERALS2_CHINESE_TEXT
+    ]
+
+
 MODS = [
     {
         "dest": "GO_Mac_Mod_Contra007",
@@ -1052,6 +1076,34 @@ MODS = [
             "approxSizeMB": 1740,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_Generals2",
+        "assets": "Generals2",
+        "catalog": {"id": "m_generals2", "shortName": "GENERALS 2", "theme": "contra"},
+        "layers": generals2_layers(),
+        "extras": [
+            ("CCG2_155_CN/Install_Final.bmp", "Install_Final.bmp"),
+        ],
+        "relocated_entries": generals2_chinese_text(),
+        "english_strings": (
+            "Generals_2_English_patch_v1.551/Data/English/generals.csf",
+            "Generals2_MOD_beta_v1.5EN/Data/English/generals.csf",
+        ),
+        "overrides": [],
+        "config": {
+            "id": "generals2",
+            "displayName": "Generals 2",
+            "version": "1.551",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": False,
+            "description": "Command & Conquer: Generals 2 beta 1.551 with the English patch, curated for macOS",
+            "author": "\"Command & Conquer: Generals 2\" MOD team; English patch by superfeatheryoshi / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1210,
+        },
+    },
 ]
 
 
@@ -1079,18 +1131,52 @@ def link(src, dest):
         shutil.copy2(src, dest)
 
 
+def read_entry_name(handle):
+    name = b""
+    while True:
+        char = handle.read(1)
+        if char in (b"\x00", b""):
+            return name.decode("latin-1")
+        name += char
+
+
 def big_entries(path):
     with open(path, "rb") as handle:
         count, _index = struct.unpack(">II", handle.read(16)[8:16])
         for _ in range(count):
             offset, size = struct.unpack(">II", handle.read(8))
-            name = b""
-            while True:
-                char = handle.read(1)
-                if char in (b"\x00", b""):
-                    break
-                name += char
-            yield name.decode("latin-1"), offset, size
+            yield read_entry_name(handle), offset, size
+
+
+def rename_entry(archive_path, entry_name, new_name):
+    """Rename one entry in place. Names must be the same length, so the index stays valid."""
+    if len(new_name) != len(entry_name):
+        raise SystemExit(f"rename length mismatch: {entry_name} -> {new_name}")
+
+    with open(archive_path, "r+b") as handle:
+        count = struct.unpack(">I", handle.read(16)[8:12])[0]
+        for _ in range(count):
+            handle.read(8)
+            position = handle.tell()
+            if read_entry_name(handle) != entry_name:
+                continue
+
+            handle.seek(position)
+            handle.write(new_name.encode("latin-1"))
+            return
+
+    raise SystemExit(f"rename target not found in archive: {entry_name}")
+
+
+def detach(path):
+    """Break the hardlink first: patching in place would corrupt downloads/."""
+    if os.stat(path).st_nlink == 1:
+        return path
+
+    temporary = path + ".tmp"
+    shutil.copy2(path, temporary)
+    os.replace(temporary, path)
+    return path
 
 
 def apply_override(archive_path, entry_name, payload_path):
@@ -1159,6 +1245,84 @@ def write_scheme_aliases(aliases, dest):
     return len(copies)
 
 
+def read_csf(path):
+    """Returns the header and labels as [name, [[kind, text, extra], ...]]."""
+    data = open(path, "rb").read()
+    header = data[:24]
+    label_count = struct.unpack("<I", header[8:12])[0]
+    labels = []
+    position = 24
+
+    for _ in range(label_count):
+        _magic, string_count, name_length = struct.unpack("<4sII", data[position:position + 12])
+        position += 12
+        name = data[position:position + name_length].decode("latin-1")
+        position += name_length
+
+        strings = []
+        for _ in range(string_count):
+            kind, length = struct.unpack("<4sI", data[position:position + 8])
+            position += 8
+            text = bytes(~byte & 0xFF for byte in data[position:position + length * 2]).decode("utf-16-le")
+            position += length * 2
+
+            extra = b""
+            if kind == b"WRTS":
+                extra_length = struct.unpack("<I", data[position:position + 4])[0]
+                extra = data[position + 4:position + 4 + extra_length]
+                position += 4 + extra_length
+            strings.append([kind, text, extra])
+
+        labels.append([name, strings])
+
+    return header, labels
+
+
+def write_csf(header, labels, dest):
+    chunks = [header]
+    for name, strings in labels:
+        encoded_name = name.encode("latin-1")
+        chunks.append(struct.pack("<4sII", b" LBL", len(strings), len(encoded_name)) + encoded_name)
+
+        for kind, text, extra in strings:
+            encoded = text.encode("utf-16-le")
+            chunks.append(struct.pack("<4sI", kind, len(encoded) // 2))
+            chunks.append(bytes(~byte & 0xFF for byte in encoded))
+            if kind == b"WRTS":
+                chunks.append(struct.pack("<I", len(extra)) + extra)
+
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "wb") as handle:
+        handle.write(b"".join(chunks))
+
+
+def is_chinese(text):
+    return any("一" <= char <= "鿿" for char in text)
+
+
+def write_english_strings(translation, earlier_release, dest):
+    """A fan translation that stopped at the mod's own strings: whatever it left in Chinese
+    takes the wording of the mod's earlier English release. The engine adopts mod English
+    over a localized install only where it differs from the install's English."""
+    header, labels = read_csf(os.path.join(SRC, translation))
+    _header, earlier_labels = read_csf(os.path.join(SRC, earlier_release))
+    earlier = {name.lower(): strings[0][1] for name, strings in earlier_labels if strings}
+
+    filled = 0
+    for name, strings in labels:
+        wording = earlier.get(name.lower())
+        if not strings or not is_chinese(strings[0][1]) or wording is None or is_chinese(wording):
+            continue
+
+        strings[0][1] = wording
+        filled += 1
+
+    if not DRY_RUN:
+        write_csf(header, labels, dest)
+
+    return filled
+
+
 MAP_CACHE_ENTRY = re.compile(r"(?ms)^MapCache (\S+)\r?\n.*?^END\r?\n")
 
 
@@ -1223,6 +1387,10 @@ def missing_sources(mod):
             return source
 
     for source, _entry_name, _relative in mod.get("unpacked", []):
+        if not os.path.exists(os.path.join(SRC, source)):
+            return source
+
+    for source in mod.get("english_strings", ()):
         if not os.path.exists(os.path.join(SRC, source)):
             return source
 
@@ -1317,6 +1485,12 @@ def build(mod):
         count = write_map_cache(mod, os.path.join(dest_dir, relative))
         print(f"    {relative:<34} <- {map_cache[0]} + {count} entries of assets/{mod['assets']}/{map_cache[1]}")
 
+    english_strings = mod.get("english_strings")
+    if english_strings:
+        relative = "Data/English/generals.csf"
+        count = write_english_strings(*english_strings, os.path.join(dest_dir, relative))
+        print(f"    {relative:<34} <- {english_strings[0]} + {count} strings of {english_strings[1]}")
+
     for archive_name, entry_name, asset_relative in mod["overrides"]:
         target = next(n for n in names if n.endswith(f"_{archive_name}.big"))
         payload = os.path.join(asset_dir, asset_relative)
@@ -1325,12 +1499,16 @@ def build(mod):
         if DRY_RUN:
             continue
 
-        # Break the hardlink first: patching in place would corrupt downloads/.
-        patched = os.path.join(dest_dir, target)
-        temporary = patched + ".tmp"
-        shutil.copy2(patched, temporary)
-        os.replace(temporary, patched)
-        apply_override(patched, entry_name, payload)
+        apply_override(detach(os.path.join(dest_dir, target)), entry_name, payload)
+
+    for archive_name, entry_name, new_name in mod.get("relocated_entries", []):
+        target = next(n for n in names if n.endswith(f"_{archive_name}.big"))
+        print(f"    rename {target} :: {entry_name} -> {new_name}")
+
+        if DRY_RUN:
+            continue
+
+        rename_entry(detach(os.path.join(dest_dir, target)), entry_name, new_name)
 
     if not DRY_RUN:
         with open(os.path.join(dest_dir, "config.json"), "w") as handle:
