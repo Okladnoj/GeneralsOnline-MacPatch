@@ -1104,6 +1104,45 @@ MODS = [
             "approxSizeMB": 1210,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_Reborn",
+        "assets": "Reborn",
+        "catalog": {"id": "m_reborn", "shortName": "ZH REBORN", "theme": "contra"},
+        "layers": [
+            [
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_Art.big", "Art"),
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_Audio.big", "Audio"),
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_English.big", "English"),
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_INI.big", "INI"),
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_Maps.big", "Maps"),
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_Scripts.big", "Scripts"),
+                Archive("RebornV5.05_English_Bigificated", "!Reborn505_Window.big", "Window"),
+            ],
+            control_bar_pro_18_buttons_layer(),
+        ],
+        "extras": [
+            ("RebornV5.05_English_Bigificated/Install_Final.bmp", "Install_Final.bmp"),
+            ("RebornV5.05_English_Bigificated/GENARIAL.ttf", "GENARIAL.ttf"),
+            ("Reborn/QuitMenu.wnd", "Window/Menus/QuitMenu.wnd"),
+            ("Reborn/QuitNoSave.wnd", "Window/Menus/QuitNoSave.wnd"),
+            ("Reborn/QuitWindowPro_1024_1024.tga", "Art/Textures/QuitWindowPro_1024_1024.tga"),
+            ("Reborn/283.tga", "Art/Textures/283.tga"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "reborn",
+            "displayName": "Zero Hour Reborn",
+            "version": "5.05-en1.05",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Zero Hour Reborn 5.05 \"The Last Stand\" with the English patch 1.05 + Control Bar Pro 2.1.1 (18 buttons), curated for macOS",
+            "author": "Nuker; v5.05 by TipaIvan and generals-zh.ru; English patch by Itbankrock and DenGresh / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 830,
+        },
+    },
 ]
 
 
