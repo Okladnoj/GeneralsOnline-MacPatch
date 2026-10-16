@@ -1143,6 +1143,38 @@ MODS = [
             "approxSizeMB": 830,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_ZHRetarded",
+        "assets": "ZHRetarded",
+        "catalog": {"id": "m_zhr", "shortName": "ZH RETARDED", "theme": "contra"},
+        "layers": [
+            [
+                Archive("Zero+Hour+Retarded+4", "0000Retarded4.big", "Retarded4"),
+                Archive("Zero+Hour+Retarded+4", "00000RetardedLAG.big", "RetardedLAG"),
+            ],
+            control_bar_pro_zh_layer(),
+        ],
+        "extras": [
+            ("ZHRetarded/Install_Final.bmp", "Install_Final.bmp"),
+            ("ZHRetarded/QuitMenu.wnd", "Window/Menus/QuitMenu.wnd"),
+            ("ZHRetarded/QuitNoSave.wnd", "Window/Menus/QuitNoSave.wnd"),
+            ("ZHRetarded/QuitWindowPro_1024_2048.dds", "Art/Textures/QuitWindowPro_1024_2048.dds"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "zhr",
+            "displayName": "Zero Hour Retarded",
+            "version": "4.0-lag",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Zero Hour Retarded V4 with the Retarded Lag Patch + Control Bar Pro 1.2, curated for macOS",
+            "author": "TheGunrun / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 135,
+        },
+    },
 ]
 
 
