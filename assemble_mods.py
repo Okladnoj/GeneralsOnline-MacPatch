@@ -1079,7 +1079,7 @@ MODS = [
     {
         "dest": "GO_Mac_Mod_Generals2",
         "assets": "Generals2",
-        "catalog": {"id": "m_generals2", "shortName": "GENERALS 2", "theme": "contra"},
+        "catalog": {"id": "m_generals2", "shortName": "C&C GEN 2", "theme": "contra"},
         "layers": generals2_layers(),
         "extras": [
             ("CCG2_155_CN/Install_Final.bmp", "Install_Final.bmp"),
@@ -1092,9 +1092,9 @@ MODS = [
         "overrides": [],
         "config": {
             "id": "generals2",
-            "displayName": "Generals 2",
+            "displayName": "C&C Gen 2",
             "version": "1.551",
-            "packageVersion": 1,
+            "packageVersion": 2,
             "baseGame": "zh",
             "online": True,
             "maskBaseScripts": False,
