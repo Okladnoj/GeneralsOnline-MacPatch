@@ -1281,6 +1281,43 @@ MODS = [
             "approxSizeMB": 4110,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_DestructiveForces",
+        "assets": "DestructiveForces",
+        "catalog": {"id": "m_destructive_forces", "shortName": "DESTRUCTIVE FORCES", "theme": "contra"},
+        "layers": [
+            [
+                Archive("Destructive Forces V1.4", "Destructive_ForcesV1.4.big", "DestructiveForces"),
+            ],
+            control_bar_pro_zh_layer(),
+        ],
+        "extras": [
+            ("Destructive Forces V1.4/Install_Final.bmp", "Install_Final.bmp"),
+        ],
+        # The mod archive ships its own ControlBarScheme.ini and InGameUI.ini and outranks
+        # Control Bar Pro; loose copies of the Control Bar Pro files outrank every archive.
+        "unpacked": [
+            (f"{CONTROL_BAR_PRO_ZH}/340_ControlBarProData1080ZH.big", "Data\\INI\\ControlBarScheme.ini", "Data/INI/ControlBarScheme.ini"),
+            (f"{CONTROL_BAR_PRO_ZH}/340_ControlBarProData1080ZH.big", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+        ],
+        "scheme_aliases": {
+            "America8x6": ["USAGLAGeneral", "MOAC"],
+        },
+        "overrides": [],
+        "config": {
+            "id": "destructive-forces",
+            "displayName": "Destructive Forces",
+            "version": "1.4",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Destructive Forces 1.4 (naval warfare, 14 new generals, AI for every side) + Control Bar Pro 1.2, curated for macOS",
+            "author": "XitArS / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 200,
+        },
+    },
 ]
 
 
