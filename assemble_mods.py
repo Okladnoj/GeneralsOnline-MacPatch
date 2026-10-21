@@ -152,6 +152,7 @@ def control_bar_pro_layer():
 
 
 CONTROL_BAR_PRO_ZH = "ControlBarProZH_v1.2_1920x1080"
+CONTROL_BAR_PRO_ZH_SCHEMES = os.path.join(SRC, CONTROL_BAR_PRO_ZH, "340_ControlBarProData1080ZH.big")
 
 
 def control_bar_pro_zh_layer():
@@ -163,6 +164,7 @@ def control_bar_pro_zh_layer():
 
 
 CONTRA008_TREE = os.path.relpath(os.path.join(ROOT, "GO_Mac_Mod_Contra008"), SRC)
+CONTROL_BAR_PRO_18_SCHEMES = os.path.join(SRC, CONTRA008_TREE, "00_ControlBarPro_Contra.big")
 
 
 def control_bar_pro_18_buttons_layer():
@@ -439,6 +441,75 @@ def generals2_chinese_text():
         for archive in GENERALS2_ARCHIVES
         for name in GENERALS2_CHINESE_TEXT
     ]
+
+
+REVOLUTION = "Rev30"
+REVOLUTION_ARCHIVES = {
+    "0RTerr.big": "Terr",
+    "0RTexures1.big": "Textures1",
+    "0RTexures2.big": "Textures2",
+    "0RTexures3.big": "Textures3",
+    "0RTexures4.big": "Textures4",
+    "0RW3D1.big": "W3D1",
+    "0RW3D2.big": "W3D2",
+    "0RW3D3.big": "W3D3",
+    "0RW3D4.big": "W3D4",
+}
+REVOLUTION_LOOSE_DIRS = {
+    "Data/AUDIO": "Data/Audio",
+    "Data/Cursors": "Data/Cursors",
+    "Data/English": "Data/English",
+    "Data/INI": "Data/INI",
+    "Data/Movies": "Data/Movies",
+    "Data/Scripts": "Data/Scripts",
+    "Data/WaterPlane": "Data/WaterPlane",
+    "Window": "Window",
+    "MAPS": "Maps",
+}
+REVOLUTION_SKIPPED = {
+    "Data/Audio/Tracks/AlbumArtSmall.jpg",
+    "Data/Audio/Tracks/Folder.jpg",
+    "Data/English/ENG/generals.csf",
+    "Data/English/generalsRU.csf",
+    "Data/English/Art/Textures/TitleScreenuserinterfaceOLD.tga",
+    "Data/English/Movies/Generals Name.txt",
+    "Window/Menus/MainMenu Old.wnd",
+}
+REVOLUTION_CONTROL_BAR = {
+    "Data/INI/ControlBarScheme.ini",
+    "Window/ControlBarPopupDescription.wnd",
+    "Window/GeneralsExpPoints.wnd",
+}
+
+
+def revolution_layers():
+    return [
+        [Archive(REVOLUTION, original, name) for original, name in REVOLUTION_ARCHIVES.items()],
+        control_bar_pro_18_buttons_layer(),
+    ]
+
+
+def revolution_extras():
+    """Revolution 3.0 installs as loose files next to nine art archives. Its Russian text
+    sits beside the English one as generalsRU.csf; moved to Data/Russian it serves Russian
+    players and leaves the mod's English to everyone else. Loose files outrank archives, so
+    the mod's own control bar files stay out and Control Bar Pro takes their place.
+
+    The mod numbers its command slots for the seven columns of Zero Hour, while Control Bar
+    Pro has nine. Its ControlBar.wnd from assets/ moves slots 11-14 to the last two columns,
+    as Contra numbers them, so Sell and Rally Point keep to the right edge and 15-18 fill
+    the middle."""
+    loose = [
+        (source, relative)
+        for folder, dest in REVOLUTION_LOOSE_DIRS.items()
+        for source, relative in loose_files(f"{REVOLUTION}/{folder}", dest)
+        if relative not in REVOLUTION_SKIPPED | REVOLUTION_CONTROL_BAR
+    ]
+    return [
+        (f"{REVOLUTION}/Install_Final.bmp", "Install_Final.bmp"),
+        (f"{REVOLUTION}/Data/English/generalsRU.csf", "Data/Russian/generals.csf"),
+        ("Revolution/ControlBar.wnd", "Window/ControlBar.wnd"),
+    ] + loose
 
 
 MODS = [
@@ -1175,6 +1246,41 @@ MODS = [
             "approxSizeMB": 135,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_Revolution",
+        "assets": "Revolution",
+        "catalog": {"id": "m_revolution", "shortName": "REVOLUTION", "theme": "contra"},
+        "layers": revolution_layers(),
+        "extras": revolution_extras(),
+        "scheme_aliases": {
+            "America8x6": ["EEAUkraine", "Japan"],
+            "China8x6": ["Eurasian_Russia"],
+        },
+        "scheme_source": CONTROL_BAR_PRO_18_SCHEMES,
+        "overrides": [],
+        "anchors": [
+            "00_ControlBarPro_Contra.big",
+            "01_Terr.big",
+            "09_W3D4.big",
+            "Install_Final.bmp",
+            "Data/INI/GameData.ini",
+            "Data/Russian/generals.csf",
+            "Maps/MapCache.ini",
+        ],
+        "config": {
+            "id": "revolution",
+            "displayName": "Revolution Project",
+            "version": "3.0",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Revolution Project 3.0 with English and Russian text + Control Bar Pro 2.1.1 (18 buttons), curated for macOS",
+            "author": "Virtual Svit / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 4110,
+        },
+    },
 ]
 
 
@@ -1290,13 +1396,12 @@ def extract_entry(archive_path, entry_name, dest):
         handle.write(payload)
 
 
-def write_scheme_aliases(aliases, dest):
+def write_scheme_aliases(aliases, schemes_archive, dest):
     """Control Bar Pro ships schemes for the stock sides only, and a side without one falls
     back to "Default", which no mod defines. Every other side of the mod gets a copy of a stock
     scheme under its own name; the engine reads Data/INI/ControlBarScheme/ after the main file.
     """
-    archive_path = os.path.join(SRC, CONTROL_BAR_PRO_ZH, "340_ControlBarProData1080ZH.big")
-    text = read_entry(archive_path, "Data\\INI\\ControlBarScheme.ini").decode("latin-1").replace("\r\n", "\n")
+    text = read_entry(schemes_archive, "Data\\INI\\ControlBarScheme.ini").decode("latin-1").replace("\r\n", "\n")
     stock = {m.group(1): m.group(0) for m in re.finditer(r"(?ms)^ControlBarScheme\s+(\S+)\n.*?^End\s*$", text)}
 
     copies = []
@@ -1547,7 +1652,8 @@ def build(mod):
     scheme_aliases = mod.get("scheme_aliases")
     if scheme_aliases:
         relative = f"Data/INI/ControlBarScheme/{mod['assets']}Sides.ini"
-        count = write_scheme_aliases(scheme_aliases, os.path.join(dest_dir, relative))
+        schemes_archive = mod.get("scheme_source", CONTROL_BAR_PRO_ZH_SCHEMES)
+        count = write_scheme_aliases(scheme_aliases, schemes_archive, os.path.join(dest_dir, relative))
         print(f"    {relative:<34} <- {count} Control Bar Pro schemes for the mod's own sides")
 
     map_cache = mod.get("map_cache")
