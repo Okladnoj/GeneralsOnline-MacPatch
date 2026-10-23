@@ -2,8 +2,9 @@
 # Download release assets from GitHub and unpack into local trees.
 #
 # Usage:
-#   ./download_unpack.sh                 # Patch + all mods
+#   ./download_unpack.sh                 # Patch + hotkey presets + all mods
 #   ./download_unpack.sh Patch Contra007
+#   ./download_unpack.sh HotkeyPresets
 #   ./download_unpack.sh ContraX Silent_Death
 set -euo pipefail
 
@@ -16,16 +17,17 @@ TARGETS=()
 for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
+    HotkeyPresets|GO_Mac_HotkeyPresets) TARGETS+=(HotkeyPresets) ;;
     Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces)" >&2
+      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces)
+  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces)
 fi
 
 download_unzip() {
@@ -69,6 +71,9 @@ for t in "${TARGETS[@]}"; do
     Patch)
       download_unzip GO_Mac_Patch.zip GO_Mac_Patch
       ;;
+    HotkeyPresets)
+      download_unzip GO_Mac_HotkeyPresets.zip GO_Mac_HotkeyPresets
+      ;;
     Contra007|Contra008|Contra009|Apocalptic|ShockWave|RotR|Old_Boss_R3|NProject|TEOD|OFS|Blitz2|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces)
       download_unzip "GO_Mac_Mod_$t.zip" "GO_Mac_Mod_$t"
       if [[ ! -f "GO_Mac_Mod_$t/config.json" ]]; then
@@ -109,4 +114,4 @@ for t in "${TARGETS[@]}"; do
   esac
 done
 
-echo "✅ Done! Unpacked under GO_Mac_Patch/ and/or GO_Mac_Mod_*/"
+echo "✅ Done! Unpacked under GO_Mac_Patch/, GO_Mac_HotkeyPresets/ and/or GO_Mac_Mod_*/"
