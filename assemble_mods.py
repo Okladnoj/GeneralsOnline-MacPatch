@@ -335,6 +335,34 @@ def shockwave_layers():
     ]
 
 
+SHW_BASE_MOVIES = (
+    "Comp_ArmourGen_000", "Comp_ArmourGen_inv_000",
+    "Comp_SalvageGen_000", "Comp_SalvageGen_inv_000",
+    "Comp_Shw_LaserGen_000", "Comp_Shw_LaserGen_inv_000",
+    "Comp_Shw_StealthGen_000", "Comp_Shw_StealthGen_inv_000",
+    "SW_GC_Background", "Shw_Intro",
+)
+
+
+def shockwave_chaos_layers():
+    base, hotfix, _singleplayer_experience, control_bar = shockwave_layers()
+    chaos = "SHWGoodBalanceModdb"
+    challenge_over_hotfix = "!" * 6 + "Shw_Challenge.gib"
+    return [
+        base,
+        hotfix,
+        [
+            Archive(chaos, "!ChaosArt.big", "ChaosArt"),
+            Archive(chaos, "!ChaosAudio.big", "ChaosAudio"),
+            Archive(chaos, "!ShwAudio.gib", "Audio"),
+            Archive(chaos, "!ShwTextures.gib", "Textures"),
+            Archive(chaos, "!Shw_Challenge.gib", "Challenge", rank=challenge_over_hotfix),
+            Archive(chaos, "!Shw_ini.gib", "INI"),
+        ],
+        control_bar,
+    ]
+
+
 def rotr_layers():
     base, patch = "ROTR_1.85", "ROTR_1.86"
     return [
@@ -766,6 +794,35 @@ MODS = [
             "author": "SWR Productions / curated for macOS",
             "bigGlob": "*.big",
             "approxSizeMB": 1060,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_ShockWave_Chaos",
+        "assets": "ShockWave_Chaos",
+        "catalog": {"id": "m_shockwave_chaos", "shortName": "SHOCKWAVE CHAOS", "theme": "contra"},
+        "layers": shockwave_chaos_layers(),
+        "extras": [
+            ("SHWGoodBalanceModdb/Install_Final.bmp", "Install_Final.bmp"),
+        ] + [
+            (f"ShockWave_1.201/Data/Movies/{movie}.bik", f"Data/Movies/{movie}.bik")
+            for movie in SHW_BASE_MOVIES
+        ],
+        "unpacked": [
+            ("SHWGoodBalanceModdb/!Shw_ini.gib", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+        ],
+        "overrides": [],
+        "config": {
+            "id": "shockwave-chaos",
+            "displayName": "ShockWave Chaos",
+            "version": "1.201-hf6-update49",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "ShockWave Chaos Update 49 over ShockWave 1.201 + Hotfix v6 (new units, own campaigns, reworked challenges), curated for macOS",
+            "author": "Splinterus (No Life Studios), SWR Productions / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 900,
         },
     },
     {
