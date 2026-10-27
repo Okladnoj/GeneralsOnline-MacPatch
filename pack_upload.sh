@@ -1,13 +1,14 @@
 #!/bin/bash
 # Pack local trees into release zips and upload to GitHub.
 #
-# Trees: GO_Mac_Patch/, GO_Mac_HotkeyPresets/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces/
+# Trees: GO_Mac_Patch/, GO_Mac_HotkeyPresets/, GO_Mac_Mod_Contra007|008|009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|RaptorWC/
 # GO_Mac_HotkeyPresets/: Assets/ (Zero Hour) and AssetsGenerals/ (Generals) hold the shipped presets.
 # Split mods ship numbered parts: ContraX → .{1,2,3}.zip (contrax_parts.sh),
 # Silent_Death → .{1,2,3,4}.zip (silent_death_parts.sh),
 # ContraX_Brutal → .{1,2,3}.zip (contrax_brutal_parts.sh),
 # WW3 → .{1,2,3}.zip (ww3_parts.sh),
-# ZHE → .{1,2,3}.zip (zhe_parts.sh).
+# ZHE → .{1,2,3}.zip (zhe_parts.sh),
+# RaptorWC → .{1,2,3}.zip (raptor_wc_parts.sh).
 #
 # Usage:
 #   ./pack_upload.sh                  # everything, pack + upload
@@ -28,6 +29,8 @@ source ./contrax_brutal_parts.sh
 source ./ww3_parts.sh
 # shellcheck source=zhe_parts.sh
 source ./zhe_parts.sh
+# shellcheck source=raptor_wc_parts.sh
+source ./raptor_wc_parts.sh
 
 REPO="${REPO:-Okladnoj/GeneralsOnline-MacPatch}"
 TAG="${TAG:-v1.0}"
@@ -41,16 +44,16 @@ for arg in "$@"; do
     --upload) UPLOAD=1 ;;
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
     HotkeyPresets|GO_Mac_HotkeyPresets) TARGETS+=(HotkeyPresets) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|RaptorWC) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces)" >&2
+      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces)
+  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC)
 fi
 
 status=0
@@ -201,6 +204,7 @@ for t in "${TARGETS[@]}"; do
     ContraX_Brutal) pack_parts GO_Mac_Mod_ContraX_Brutal CONTRAX_BRUTAL 3 ;;
     WW3) pack_parts GO_Mac_Mod_WW3 WW3 3 ;;
     ZHE) pack_parts GO_Mac_Mod_ZHE ZHE 3 ;;
+    RaptorWC) pack_parts GO_Mac_Mod_RaptorWC RAPTOR_WC 3 ;;
   esac
 done
 

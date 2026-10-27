@@ -13,6 +13,7 @@ Local edits (custom splash screens, patched textures) live in assets/<mod>/ and 
 applied after the archives are linked, so re-running this script never loses them.
 """
 
+import filecmp
 import hashlib
 import json
 import os
@@ -140,6 +141,40 @@ class Overlay:
         with open(archive_path, "rb") as archive, open(path, "rb") as loose:
             archive.seek(offset)
             return archive.read(size) == loose.read()
+
+
+class Localization:
+    def __init__(self, source, english, dirs):
+        self.source = source
+        self.english = english
+        self.dirs = dirs
+
+    def files(self):
+        for folder, dest in self.dirs.items():
+            english_files = self.files_by_lower_name(os.path.join(SRC, self.english, folder))
+            root = os.path.join(SRC, self.source, folder)
+
+            for name in sorted(os.listdir(root)):
+                path = os.path.join(root, name)
+                if name in Tree.SKIP_NAMES or self.matches_english(path, english_files):
+                    continue
+
+                yield path, os.path.join(dest, name)
+
+    @staticmethod
+    def files_by_lower_name(root):
+        if not os.path.isdir(root):
+            return {}
+
+        return {name.lower(): os.path.join(root, name) for name in os.listdir(root)}
+
+    @staticmethod
+    def matches_english(path, english_files):
+        english = english_files.get(os.path.basename(path).lower())
+        if english is None:
+            return False
+
+        return filecmp.cmp(path, english, shallow=False)
 
 
 # Unofficial Control Bar Pro 2.1.1 rebuilt for Contra by Hojjat. Nine leading '!' put it
@@ -415,6 +450,30 @@ def ww3_overlay():
             r"Data/Audio/Sounds/rus-.+\.wav",
             r"Maps/[^/]+\.ini",
             r".+\.(txt|lnk)",
+        ],
+    )
+
+
+RAPTOR_WC = "Project_Raptor_War_Commanders_9.1.27_ENG_Voice/Command and Conquer Generals Zero Hour"
+RAPTOR_WC_RUSSIAN = "Project Raptor 9.1.27/extracted/app/Generals ZeroHour"
+RAPTOR_WC_RUSSIAN_DIRS = {
+    "Data/Audio/Speech/English": "Data/Audio/Speech/Russian",
+    "Data/Audio/Sounds/English": "Data/Audio/Sounds/Russian",
+    "Data/English/Movies": "Data/Russian/Movies",
+}
+
+
+def raptor_wc_overlay():
+    return Overlay(
+        RAPTOR_WC,
+        dirs=["Art", "Data", "Maps", "Window"],
+        shadowing=["PatchZH.big"] + ZH_ARCHIVES,
+        skip=[
+            r"Data/Scripts/.+/.+",
+            r"Data/Scripts/SkirmishScripts .+\.scb",
+            r"Data/English/(?!generals\.csf$)[^/]+\.csf",
+            r"(.+/)?desktop\.ini",
+            r".+\.(txt|sfk|psd)",
         ],
     )
 
@@ -1375,6 +1434,52 @@ MODS = [
             "approxSizeMB": 200,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_RaptorWC",
+        "assets": "RaptorWC",
+        "catalog": {"id": "m_raptor_wc", "shortName": "WAR COMMANDERS", "theme": "contra"},
+        "layers": [
+            [Archive(RAPTOR_WC, "PatchZH.big", "RaptorPatch")],
+        ],
+        "overlay": raptor_wc_overlay(),
+        "localizations": [Localization(RAPTOR_WC_RUSSIAN, RAPTOR_WC, RAPTOR_WC_RUSSIAN_DIRS)],
+        "extras": [
+            (f"{RAPTOR_WC}/Install_Final.bmp", "Install_Final.bmp"),
+            (f"{RAPTOR_WC}/Data/INI/ChallengeMode.ini", "Data/INI/ChallengeMode.ini"),
+            (f"{RAPTOR_WC_RUSSIAN}/Data/English/generals.csf", "Data/Russian/generals.csf"),
+        ],
+        "overrides": [],
+        "anchors": [
+            "00_RaptorPatch.big",
+            "Install_Final.bmp",
+            "Data/INI/ChallengeMode.ini",
+            "Data/Russian/generals.csf",
+            "Maps/MapCache.ini",
+            "Art/Textures/TDControlBar512.dds",
+            "Data/Audio/Speech/Russian/A_927_100.wav",
+        ],
+        "parts": [
+            ["config.json", "Install_Final.bmp", "00_RaptorPatch.big",
+             "Data/Cursors", "Data/Dazzle.INI", "Data/Debug", "Data/Editor", "Data/English", "Data/INI",
+             "Data/Metals.INI", "Data/Mouse.ini", "Data/Movies", "Data/Russian", "Data/Scripts",
+             "Data/WaterPlane", "Maps", "Window"],
+            ["Art"],
+            ["Data/Audio"],
+        ],
+        "config": {
+            "id": "raptor-wc",
+            "displayName": "Project Raptor: War Commanders",
+            "version": "9.1.27",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Generals Project Raptor: War Commanders 9.1.27 (General BOSS and Militia factions, long new campaigns) with English and Russian text and voices, curated for macOS",
+            "author": "generalszhprojectrap: Vanguard, TipaIvan, DetroyT, GenJohnson, MODoGEN, 927AVIApolk / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 3660,
+        },
+    },
 ]
 
 
@@ -1647,6 +1752,10 @@ def missing_sources(mod):
     if overlay and not os.path.isdir(os.path.join(SRC, overlay.source)):
         return f"downloads/files/{overlay.source}/"
 
+    for localization in mod.get("localizations", []):
+        if not os.path.isdir(os.path.join(SRC, localization.source)):
+            return f"downloads/files/{localization.source}/"
+
     for archive in resolve_layers(mod["layers"]):
         if not os.path.exists(archive.source):
             return f"{archive.layer_dir}/{archive.original}"
@@ -1727,6 +1836,13 @@ def build(mod):
             loose += 1
             link(source, os.path.join(dest_dir, relative))
         print(f"    {loose} loose files <- downloads/files/{overlay.source}/")
+
+    for localization in mod.get("localizations", []):
+        localized = 0
+        for source, relative in localization.files():
+            localized += 1
+            link(source, os.path.join(dest_dir, relative))
+        print(f"    {localized} localized files <- downloads/files/{localization.source}/")
 
     for source, relative in mod["extras"]:
         override = os.path.join(asset_dir, os.path.basename(relative))
