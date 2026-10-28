@@ -18,16 +18,16 @@ for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
     HotkeyPresets|GO_Mac_HotkeyPresets) TARGETS+=(HotkeyPresets) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|RaptorWC) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|RaptorWC|VGO) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC)" >&2
+      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC VGO)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC)
+  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC VGO)
 fi
 
 download_unzip() {
@@ -74,7 +74,7 @@ for t in "${TARGETS[@]}"; do
     HotkeyPresets)
       download_unzip GO_Mac_HotkeyPresets.zip GO_Mac_HotkeyPresets
       ;;
-    Contra007|Contra008|Contra009|Apocalptic|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|TEOD|OFS|Blitz2|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces)
+    Contra007|Contra008|Contra009|Apocalptic|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|TEOD|OFS|Blitz2|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|VGO)
       download_unzip "GO_Mac_Mod_$t.zip" "GO_Mac_Mod_$t"
       if [[ ! -f "GO_Mac_Mod_$t/config.json" ]]; then
         echo "missing GO_Mac_Mod_$t/config.json" >&2

@@ -478,6 +478,18 @@ def raptor_wc_overlay():
     )
 
 
+VGO = "VGO_Hydra/extracted/VGO/Mod Files"
+VGO_PATCH = "VGO_Patch_2.1"
+
+
+def vgo_layers():
+    return [
+        [Archive(VGO, f"0VGO_{part}.vgo", part) for part in ("Art", "Audio", "Code", "Maps")]
+        + [Archive(VGO, "0VGO_NVA_Shell.shell", "NVAShell")],
+        [Archive(VGO_PATCH, f"0VGO_99_{part}_v2-1.vgo", f"{part}21") for part in ("Art", "Code")],
+    ]
+
+
 ZHE_ARCHIVES = [
     "!ZHE8Audio_98.big", "!ZHE8Audio_99.big", "!ZHE8CameoHD_99.big", "!ZHE8INI_99.big",
     "!ZHE8IUI_97.big", "!ZHE8Language_99.big", "!ZHE8Maps_99.big", "!ZHE8Music_99.big",
@@ -1478,6 +1490,35 @@ MODS = [
             "author": "generalszhprojectrap: Vanguard, TipaIvan, DetroyT, GenJohnson, MODoGEN, 927AVIApolk / curated for macOS",
             "bigGlob": "*.big",
             "approxSizeMB": 3660,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_VGO",
+        "assets": "VGO",
+        "catalog": {"id": "m_vgo", "shortName": "GLORY OBSCURED", "theme": "contra"},
+        "layers": vgo_layers(),
+        "extras": [
+            (f"{VGO}/Install_Final.bmp", "Install_Final.bmp"),
+            (f"{VGO}/Batik.ttf", "Batik.ttf"),
+            (f"{VGO}/intro_movie.bik", "Data/Movies/intro_movie.bik"),
+            (f"{VGO}/SkirmishScripts.scb", "Data/Scripts/SkirmishScripts.scb"),
+            (f"{VGO}/MultiplayerScripts.scb", "Data/Scripts/MultiplayerScripts.scb"),
+            ("VGO/MainMenu.wnd", "Window/Menus/MainMenu.wnd"),
+        ] + loose_files("VGO_Elandslaagte", "Maps/Elandslaagte"),
+        "map_cache": (f"{VGO}/0VGO_Maps.vgo", "MapCache.generated.ini"),
+        "overrides": [],
+        "config": {
+            "id": "vgo",
+            "displayName": "Vietnam: Glory Obscured",
+            "version": "2.1",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Vietnam | Glory Obscured 2.1 \"Hydra\" (USA and North Vietnamese Army, jungle warfare, village occupation), curated for macOS",
+            "author": "VGO Mod Dev Team / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 880,
         },
     },
 ]
