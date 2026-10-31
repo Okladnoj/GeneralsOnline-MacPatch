@@ -505,6 +505,16 @@ def ra_redux_layers():
     ]
 
 
+SILENT_KILLER = "SilentKiller"
+
+
+def silent_killer_layers():
+    return [
+        [Archive(SILENT_KILLER, f"ALWADI{part.upper()}.big", part) for part in ("Art", "Data")],
+        control_bar_pro_zh_layer(),
+    ]
+
+
 ZHE_ARCHIVES = [
     "!ZHE8Audio_98.big", "!ZHE8Audio_99.big", "!ZHE8CameoHD_99.big", "!ZHE8INI_99.big",
     "!ZHE8IUI_97.big", "!ZHE8Language_99.big", "!ZHE8Maps_99.big", "!ZHE8Music_99.big",
@@ -1558,6 +1568,47 @@ MODS = [
             "author": "C&C Redux Development Team (sgtmyers88) / curated for macOS",
             "bigGlob": "*.big",
             "approxSizeMB": 1470,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_SilentKiller",
+        "assets": "SilentKiller",
+        "catalog": {"id": "m_silent_killer", "shortName": "SILENT KILLER", "theme": "contra"},
+        "layers": silent_killer_layers(),
+        "extras": [
+            ("SilentKiller/Install_Final.bmp", "Install_Final.bmp"),
+            ("SilentKiller/HelicopterGeneral.ini", "Data/INI/Object/HelicopterGeneral.ini"),
+            ("SilentKiller/generals.csf", "Data/English/generals.csf"),
+            ("SilentKiller/SCSmShellUserInterface512_001.tga", "Data/English/Art/Textures/SCSmShellUserInterface512_001.tga"),
+            ("SilentKiller/QuitMenu.wnd", "Window/Menus/QuitMenu.wnd"),
+            ("SilentKiller/QuitNoSave.wnd", "Window/Menus/QuitNoSave.wnd"),
+            ("SilentKiller/QuitWindowPro_1024_2048.dds", "Art/Textures/QuitWindowPro_1024_2048.dds"),
+        ],
+        # The mod archive repeats the stock ZH copies of these files and outranks Control Bar Pro.
+        "unpacked": [
+            (f"{CONTROL_BAR_PRO_ZH}/340_ControlBarProData1080ZH.big", "Data\\INI\\ControlBarScheme.ini", "Data/INI/ControlBarScheme.ini"),
+            (f"{CONTROL_BAR_PRO_ZH}/340_ControlBarProData1080ZH.big", "Data\\INI\\InGameUI.ini", "Data/INI/InGameUI.ini"),
+            (f"{CONTROL_BAR_PRO_ZH}/340_ControlBarPro1080ZH.big", "Data\\English\\HeaderTemplate.ini", "Data/English/HeaderTemplate.ini"),
+            (f"{CONTROL_BAR_PRO_ZH}/340_ControlBarPro1080ZH.big", "Data\\English\\Language.ini", "Data/English/Language.ini"),
+        ],
+        "scheme_aliases": {
+            "America8x6": ["AmericaAssaultGeneral", "AmericaHelicopterGeneral", "AmericaCommanderInChief"],
+            "China8x6": ["ChinaEMPNapalmGeneral", "ChinaArtilleryGeneral"],
+            "GLA8x6": ["GLADictatorSaddam", "GLATerrorLeader", "GLAHijackGeneral"],
+        },
+        "overrides": [],
+        "config": {
+            "id": "silent-killer",
+            "displayName": "Silent Killer",
+            "version": "0.5-beta",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Silent Killer 0.5 Beta (nine more generals on top of the Zero Hour roster, NewStar Studio units with HD Projects effects) + Control Bar Pro 1.2, curated for macOS",
+            "author": "Dr.Vector (NewStar Studio) / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1089,
         },
     },
 ]
