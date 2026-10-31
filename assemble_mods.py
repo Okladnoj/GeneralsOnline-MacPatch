@@ -490,6 +490,21 @@ def vgo_layers():
     ]
 
 
+RA_REDUX = "CCRARDX_1_0_5"
+RA_REDUX_ADDONS = "CCRARDX_addons"
+RA_REDUX_PARTS = ("AI", "Art", "Audio", "INI", "Language", "Maps", "Shaders", "Shaders2", "Terrain", "Window")
+
+
+def ra_redux_layers():
+    return [
+        [Archive(RA_REDUX, f"00_CCRARDX{part.upper()}.big", part) for part in RA_REDUX_PARTS],
+        [
+            Archive(RA_REDUX_ADDONS, "!!!RARDX_ControlBarPro.gib", "ControlBarPro"),
+            Archive(RA_REDUX_ADDONS, "!!!RARDX_ClassicHCSkins.gib", "ClassicHCSkins"),
+        ],
+    ]
+
+
 ZHE_ARCHIVES = [
     "!ZHE8Audio_98.big", "!ZHE8Audio_99.big", "!ZHE8CameoHD_99.big", "!ZHE8INI_99.big",
     "!ZHE8IUI_97.big", "!ZHE8Language_99.big", "!ZHE8Maps_99.big", "!ZHE8Music_99.big",
@@ -1519,6 +1534,30 @@ MODS = [
             "author": "VGO Mod Dev Team / curated for macOS",
             "bigGlob": "*.big",
             "approxSizeMB": 880,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_RedAlertRedux",
+        "assets": "RedAlertRedux",
+        "catalog": {"id": "m_red_alert_redux", "shortName": "RED ALERT REDUX", "theme": "contra"},
+        "layers": ra_redux_layers(),
+        "extras": [
+            (f"{RA_REDUX}/Install_Final.bmp", "Install_Final.bmp"),
+            (f"{RA_REDUX}/RussellSquare.ttf", "RussellSquare.ttf"),
+        ] + loose_files(f"{RA_REDUX}/Data/Movies", "Data/Movies") + loose_files(f"{RA_REDUX}/Data/Cursors", "Data/Cursors"),
+        "overrides": [],
+        "config": {
+            "id": "red-alert-redux",
+            "displayName": "C&C Red Alert Redux",
+            "version": "1.0.5",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "C&C Red Alert Redux 1.0.5 (Allies and Soviets of the original Red Alert: Tesla Coils, Chronoshift, naval warfare) with the Redux Control Bar Pro and Classic house color skins, curated for macOS",
+            "author": "C&C Redux Development Team (sgtmyers88) / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 1470,
         },
     },
 ]
