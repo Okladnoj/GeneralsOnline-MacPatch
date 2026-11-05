@@ -728,6 +728,9 @@ def revolution_extras():
     ] + loose
 
 
+ADVANCED_AI = "AdvancedAIMod v2.8/For ZH 1.04"
+
+
 MODS = [
     {
         "dest": "GO_Mac_Mod_Contra007",
@@ -1748,6 +1751,32 @@ MODS = [
             "author": "QSN / curated for macOS",
             "bigGlob": "*.big",
             "approxSizeMB": 2133,
+        },
+    },
+    {
+        "dest": "GO_Mac_Mod_AdvancedAI",
+        "assets": "AdvancedAI",
+        "catalog": {"id": "m_advanced_ai", "shortName": "ADVANCED AI", "theme": "contra"},
+        "layers": [
+            control_bar_pro_zh_layer(),
+        ],
+        "extras": [
+            ("AdvancedAI/Install_Final.bmp", "Install_Final.bmp"),
+            (f"{ADVANCED_AI}/SkirmishScripts.scb", "Data/Scripts/SkirmishScripts.scb"),
+        ] + loose_files(f"{ADVANCED_AI}/INI", "Data/INI"),
+        "overrides": [],
+        "config": {
+            "id": "advanced-ai",
+            "displayName": "Advanced AI",
+            "version": "2.8",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": False,
+            "description": "Advanced AI mod 0.98 improved by AEI v2.8 (a far tougher skirmish AI for every Zero Hour general on the 1.04 rules) + Control Bar Pro 1.2, curated for macOS",
+            "author": "AEI, on AdvancedAIMod 0.98 by Lion and r42 / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 29,
         },
     },
 ]
