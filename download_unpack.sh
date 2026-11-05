@@ -18,16 +18,16 @@ for arg in "$@"; do
   case "$arg" in
     Patch|GO_Mac_Patch) TARGETS+=(Patch) ;;
     HotkeyPresets|GO_Mac_HotkeyPresets) TARGETS+=(HotkeyPresets) ;;
-    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|RaptorWC|VGO|RedAlertRedux|SilentKiller|ModernWarfare|AdvancedAI) TARGETS+=("$arg") ;;
+    Contra007|Contra008|Contra009|ContraX|Apocalptic|Silent_Death|ShockWave|ShockWave_Chaos|RotR|Old_Boss_R3|NProject|ContraX_Brutal|TEOD|OFS|Blitz2|WW3|ZHE|Continue|Generals2|Reborn|ZHRetarded|Revolution|DestructiveForces|RaptorWC|VGO|RedAlertRedux|SilentKiller|ModernWarfare|AdvancedAI|PacificAlliance) TARGETS+=("$arg") ;;
     *)
-      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC VGO RedAlertRedux SilentKiller ModernWarfare AdvancedAI)" >&2
+      echo "unknown target: $arg (Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC VGO RedAlertRedux SilentKiller ModernWarfare AdvancedAI PacificAlliance)" >&2
       exit 1
       ;;
   esac
 done
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC VGO RedAlertRedux SilentKiller ModernWarfare AdvancedAI)
+  TARGETS=(Patch HotkeyPresets Contra007 Contra008 Contra009 ContraX Apocalptic Silent_Death ShockWave ShockWave_Chaos RotR Old_Boss_R3 NProject ContraX_Brutal TEOD OFS Blitz2 WW3 ZHE Continue Generals2 Reborn ZHRetarded Revolution DestructiveForces RaptorWC VGO RedAlertRedux SilentKiller ModernWarfare AdvancedAI PacificAlliance)
 fi
 
 download_unzip() {
@@ -113,6 +113,9 @@ for t in "${TARGETS[@]}"; do
       ;;
     RaptorWC)
       download_parts GO_Mac_Mod_RaptorWC 3
+      ;;
+    PacificAlliance)
+      download_parts GO_Mac_Mod_PacificAlliance 2
       ;;
   esac
 done

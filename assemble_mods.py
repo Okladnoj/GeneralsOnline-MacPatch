@@ -429,6 +429,46 @@ def rotr_layers():
     ]
 
 
+ROTR_TREE = os.path.relpath(os.path.join(ROOT, "GO_Mac_Mod_RotR"), SRC)
+ROTR_187 = "ROTR_187_PB_2_0/extracted"
+ROTR_187_UNUSED_BASE = {"!Rotr_AI.gib", "!Rotr_INI.gib", "!!!!!ROTR_ControlBarPro.gib"}
+PACIFIC_ALLIANCE = "ROTREPA_Beta0.9.13_2"
+PACIFIC_ALLIANCE_MUSIC = "ROTRJapanFactionsMusic"
+PACIFIC_ALLIANCE_UNCACHED_MAPS = [
+    f"Maps/{name}/{name}.map"
+    for name in ("Burning Crusade [EPA ROTR] [BO]", "Lonely Mountain [EPA ROTR][BO]")
+]
+
+
+def rotr_tree_archives(skipped):
+    merged = {a.original: a for layer in rotr_layers() for a in layer}
+    built = {original: f"{i:02d}_{merged[original].name}.big" for i, original in enumerate(sorted(merged))}
+    return [
+        Archive(ROTR_TREE, built[original], merged[original].name, rank=original)
+        for original in sorted(merged)
+        if original not in skipped
+    ]
+
+
+def pacific_alliance_layers():
+    return [
+        rotr_tree_archives(ROTR_187_UNUSED_BASE),
+        [
+            Archive(ROTR_187, "!!Rotr_Intrnl_Main.gib", "Rotr187_Main"),
+            Archive(ROTR_187, "!!Rotr_Intrnl_INI.gib", "Rotr187_INI"),
+            Archive(ROTR_187, "!!Rotr_Intrnl_AI.gib", "Rotr187_AI"),
+            Archive(ROTR_187, "!!Rotr_Intrnl_Eng.gib", "Rotr187_English"),
+        ],
+        [
+            Archive(PACIFIC_ALLIANCE, f"!!!!!!!!!!ROTRJapan{part}.big", f"EPA_{part}")
+            for part in ("2BPack1", "2BPack2", "2BPack3", "Scripts")
+        ],
+        [
+            Archive(PACIFIC_ALLIANCE_MUSIC, "!!!!!!!!!!!!!!ROTRJapanFactionsMusic.big", "EPA_FactionsMusic"),
+        ],
+    ]
+
+
 WW3_ARCHIVES = [f"00PMBeta{number}.big" for number in range(993, 1000)]
 ZH_ARCHIVES = [
     "AudioEnglishZH.big", "AudioZH.big", "EnglishZH.big", "GensecZH.big", "INIZH.big",
@@ -1779,6 +1819,43 @@ MODS = [
             "approxSizeMB": 29,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_PacificAlliance",
+        "assets": "PacificAlliance",
+        "catalog": {"id": "m_pacific_alliance", "shortName": "PACIFIC ALLIANCE", "theme": "contra"},
+        "layers": pacific_alliance_layers(),
+        "extras": [
+            (f"{ROTR_TREE}/Install_Final.bmp", "Install_Final.bmp"),
+            (f"{ROTR_TREE}/00000000.016", "00000000.016"),
+            (f"{ROTR_TREE}/00000000.256", "00000000.256"),
+            (f"{ROTR_TREE}/Data/Movies/ROTR_Intro.bik", "Data/Movies/ROTR_Intro.bik"),
+        ],
+        "uncached_archive_maps": PACIFIC_ALLIANCE_UNCACHED_MAPS,
+        "map_cache": (f"{ROTR_187}/!!Rotr_Intrnl_Main.gib", "MapCache.generated.ini"),
+        "overrides": [],
+        "parts": [
+            ["config.json", "Install_Final.bmp", "00000000.016", "00000000.256", "Data", "Maps",
+             "00_EPA_FactionsMusic.big", "01_EPA_2BPack1.big", "02_EPA_2BPack2.big", "03_EPA_2BPack3.big",
+             "04_EPA_Scripts.big", "05_Rotr187_AI.big", "06_Rotr187_English.big", "07_Rotr187_INI.big",
+             "08_Rotr187_Main.big"],
+            ["09_Patch.big", "10_2D.big", "11_Audio.big", "12_Blocker.big", "13_English.big", "14_Maps.big",
+             "15_Music.big", "16_Terrain.big", "17_Textures.big", "18_Voice.big", "19_W3D.big",
+             "20_Window.big"],
+        ],
+        "config": {
+            "id": "pacific-alliance",
+            "displayName": "RotR: Empire of the Pacific Alliance",
+            "version": "0.9.13+2",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Rise of the Reds: Empire of the Pacific Alliance 0.9.13+2 (a new Asia-Pacific faction) on Rise of the Reds 1.87 Public Beta 2.0, curated for macOS",
+            "author": "imperialgerar, on Rise of the Reds by SWR Productions / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 2804,
+        },
+    },
 ]
 
 
@@ -2004,42 +2081,45 @@ def map_cache_key(name):
     return re.sub(r"_([0-9a-fA-F]{2})", lambda m: chr(int(m.group(1), 16)), name).lower()
 
 
-def loose_map_keys(mod):
+def added_map_keys(mod):
+    """Maps the authors' cache misses: loose ones from extras, plus maps a mod archive ships
+    without a cache entry (named in "uncached_archive_maps")."""
+    loose = [relative for _source, relative in mod["extras"]
+             if relative.startswith("Maps/") and relative.lower().endswith(".map")]
     return {
         relative.replace("/", "\\").lower()
-        for _source, relative in mod["extras"]
-        if relative.startswith("Maps/") and relative.lower().endswith(".map")
+        for relative in loose + mod.get("uncached_archive_maps", [])
     }
 
 
 def write_map_cache(mod, dest):
     mod_cache_archive, generated_cache = mod["map_cache"]
-    loose_maps = loose_map_keys(mod)
+    added_maps = added_map_keys(mod)
 
     generated = open(os.path.join(ASSETS, mod["assets"], generated_cache), encoding="latin-1").read()
-    loose_entries = [
+    added_entries = [
         entry.group(0).replace("\r\n", "\n")
         for entry in MAP_CACHE_ENTRY.finditer(generated)
-        if map_cache_key(entry.group(1)) in loose_maps
+        if map_cache_key(entry.group(1)) in added_maps
     ]
-    if len(loose_entries) != len(loose_maps):
+    if len(added_entries) != len(added_maps):
         raise SystemExit(
-            f"map cache: {len(loose_entries)} generated entries for {len(loose_maps)} loose maps")
+            f"map cache: {len(added_entries)} generated entries for {len(added_maps)} added maps")
 
     if DRY_RUN:
-        return len(loose_entries)
+        return len(added_entries)
 
     mod_cache = read_entry(os.path.join(SRC, mod_cache_archive), "Maps\\MapCache.ini").decode("latin-1")
-    mod_cache_without_loose_maps = MAP_CACHE_ENTRY.sub(
-        lambda entry: "" if map_cache_key(entry.group(1)) in loose_maps else entry.group(0),
+    mod_cache_without_added_maps = MAP_CACHE_ENTRY.sub(
+        lambda entry: "" if map_cache_key(entry.group(1)) in added_maps else entry.group(0),
         mod_cache.replace("\r\n", "\n"))
 
     os.makedirs(os.path.dirname(dest), exist_ok=True)
     with open(dest, "w", encoding="latin-1", newline="\r\n") as handle:
-        handle.write(mod_cache_without_loose_maps.rstrip("\n") + "\n\n")
-        handle.write("\n".join(loose_entries))
+        handle.write(mod_cache_without_added_maps.rstrip("\n") + "\n\n")
+        handle.write("\n".join(added_entries))
 
-    return len(loose_entries)
+    return len(added_entries)
 
 
 def missing_sources(mod):
