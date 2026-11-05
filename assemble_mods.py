@@ -515,6 +515,98 @@ def silent_killer_layers():
     ]
 
 
+# Modern Warfare's own game.dat loads every *.wav under the game folder as an archive and never
+# loads a *.big: the real archives hide among the sounds, and the 0*.big files are decoys
+# without a BIGF header. That game.dat skips the Zero Hour archives too, so the loose copies of
+# Zero Hour and Generals files are the whole base on Windows; here the installs provide it.
+MODERN_WARFARE = "Modern Warfare/cnc"
+MODERN_WARFARE_PATCH = "MV06_patch7"
+MODERN_WARFARE_LAN = "LAN_GAME_patch"
+MODERN_WARFARE_MISSION = "MUnanhaiA"
+MODERN_WARFARE_LANGUAGES = ["English", "German"]
+MODERN_WARFARE_LOCALIZED_TEXTURES = [
+    "Defeated.tga", "GameOver.tga", "loadpageuserinterface.tga", "Mp_Loaduserinterface.tga",
+    "ReturnLoadPageuserinterface.tga", "SCGenChallengeSelect512_001.tga", "Skirmish_Loaduserinterface.tga",
+    "TitleScreenuserinterface.tga", "victorious.tga",
+] + [f"SAUserInterface512_{number:03d}.tga" for number in range(1, 6)] + [
+    f"SCShellUserInterface512_{number:03d}.tga" for number in range(1, 7)
+] + [f"scshelluserinterface512_{number:03d}.tga" for number in range(7, 11)] + [
+    f"SNUserInterface512_{number:03d}.tga" for number in range(1, 5)
+] + [f"SSUserInterface512_{number:03d}.tga" for number in range(1, 3)] + [
+    f"SUUserInterface512_{number:03d}.tga" for number in range(1, 5)
+]
+ZH_BASE = "ZH_Base"
+GENERALS_BASE = "Generals_Base"
+GENERALS_ARCHIVES = [
+    "Audio.big", "AudioEnglish.big", "English.big", "INI.big", "Music.big", "Patch.big",
+    "Speech.big", "SpeechEnglish.big", "Terrain.big", "Textures.big", "W3D.big", "Window.big",
+    "gensec.big", "maps.big", "shaders.big",
+]
+
+
+def windows_load_rank(relative):
+    return relative.replace("/", "\\").lower()
+
+
+def archives_disguised_as_wav(source):
+    root = os.path.join(SRC, source)
+    found = []
+    for current, dirs, names in os.walk(root):
+        dirs.sort()
+        for name in names:
+            path = os.path.join(current, name)
+            if name.lower().endswith(".wav") and is_big_archive(path):
+                found.append(os.path.relpath(path, root))
+
+    return sorted(found, key=windows_load_rank)
+
+
+def is_big_archive(path):
+    with open(path, "rb") as handle:
+        return handle.read(4) == b"BIGF"
+
+
+def disguised_archive_name(relative):
+    folder, stem = os.path.split(os.path.splitext(relative)[0])
+    return f"{os.path.basename(folder)}_{stem}" if folder else stem
+
+
+def modern_warfare_layers():
+    return [[
+        Archive(MODERN_WARFARE, relative, disguised_archive_name(relative), rank=windows_load_rank(relative))
+        for relative in archives_disguised_as_wav(MODERN_WARFARE)
+    ]]
+
+
+def base_archives(base, names):
+    mod_root = os.path.join(SRC, MODERN_WARFARE)
+    return [os.path.relpath(os.path.join(SRC, base, name), mod_root) for name in names]
+
+
+def modern_warfare_overlay():
+    archives = archives_disguised_as_wav(MODERN_WARFARE)
+    return Overlay(
+        MODERN_WARFARE,
+        dirs=["ART", "Data", "Shaders"],
+        shadowing=archives + base_archives(ZH_BASE, ZH_ARCHIVES) + base_archives(GENERALS_BASE, GENERALS_ARCHIVES),
+        skip=[re.escape(relative) for relative in archives] + [
+            r"Data/(Chinese|Debug|Editor|English|INI)/.+",
+            r".+\.(txt|doc|rar)",
+            r"(.+/)?Thumbs\.db",
+        ],
+    )
+
+
+def modern_warfare_localized_textures():
+    textures = [(f"{MODERN_WARFARE}/ART/Textures/{name}", name) for name in MODERN_WARFARE_LOCALIZED_TEXTURES]
+    textures.append(("ModernWarfare/SCSmShellUserInterface512_001.tga", "SCSmShellUserInterface512_001.tga"))
+    return [
+        (source, f"Data/{language}/Art/Textures/{name}")
+        for language in MODERN_WARFARE_LANGUAGES
+        for source, name in textures
+    ]
+
+
 ZHE_ARCHIVES = [
     "!ZHE8Audio_98.big", "!ZHE8Audio_99.big", "!ZHE8CameoHD_99.big", "!ZHE8INI_99.big",
     "!ZHE8IUI_97.big", "!ZHE8Language_99.big", "!ZHE8Maps_99.big", "!ZHE8Music_99.big",
@@ -1611,6 +1703,53 @@ MODS = [
             "approxSizeMB": 1089,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_ModernWarfare",
+        "assets": "ModernWarfare",
+        "catalog": {"id": "m_modern_warfare", "shortName": "MODERN WARFARE", "theme": "contra"},
+        "layers": modern_warfare_layers(),
+        "overlay": modern_warfare_overlay(),
+        "extras": [
+            (f"{MODERN_WARFARE}/Install_Final.bmp", "Install_Final.bmp"),
+            (f"{MODERN_WARFARE}/Data/INI/Game2set.INi", "Data/INI/GameData.ini"),
+            (f"{MODERN_WARFARE}/ART/Textures/qsnskyaaa1.dds", "ART/Textures/tscloudmed.dds"),
+            (f"{MODERN_WARFARE}/ART/Textures/qsnskyaaa2.dds", "ART/Textures/tsnoiseurb.dds"),
+            (f"{MODERN_WARFARE_PATCH}/ART/w3d/UShkmjhull.W3D", "ART/w3d/UShkmjhull.W3D"),
+            (f"{MODERN_WARFARE_PATCH}/Data/English/generals.csf", "Data/English/generals.csf"),
+            (f"{MODERN_WARFARE_PATCH}/Data/English/generals.csf", "Data/German/generals.csf"),
+        ] + loose_files(f"{MODERN_WARFARE_PATCH}/Data/INi", "Data/INI")
+          + loose_files(f"{MODERN_WARFARE_PATCH}/maps", "Maps")
+          + loose_files(f"{MODERN_WARFARE_LAN}/Data/Scripts", "Data/Scripts")
+          + loose_files(f"{MODERN_WARFARE_LAN}/maps", "Maps")
+          + loose_files(MODERN_WARFARE_MISSION, f"Maps/{MODERN_WARFARE_MISSION}",
+                        rename={f"{MODERN_WARFARE_MISSION}.WAK": f"{MODERN_WARFARE_MISSION}.wak"})
+          + modern_warfare_localized_textures(),
+        "map_cache": (f"{MODERN_WARFARE}/Data/Audio/Sounds/Chinese/mdanps.wav", "MapCache.generated.ini"),
+        "overrides": [],
+        "anchors": [
+            "00_cncmusic.big",
+            "82_Speech_qsjruip.big",
+            "Install_Final.bmp",
+            "Data/INI/GameData.ini",
+            "Data/German/generals.csf",
+            "ART/Textures/tscloudmed.dds",
+            "Data/Movies/sizzle_review.bik",
+            "Maps/MUnanhaiA/MUnanhaiA.map",
+        ],
+        "config": {
+            "id": "modern-warfare",
+            "displayName": "Modern Warfare",
+            "version": "0.6-beta",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Modern Warfare 0.6 beta + patch7 and the LAN patch (China, USA, GLA and an unfinished Japan; carriers, destroyers and submarines at sea), curated for macOS",
+            "author": "QSN / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 2133,
+        },
+    },
 ]
 
 
@@ -1882,6 +2021,11 @@ def missing_sources(mod):
     overlay = mod.get("overlay")
     if overlay and not os.path.isdir(os.path.join(SRC, overlay.source)):
         return f"downloads/files/{overlay.source}/"
+
+    for archive in overlay.shadowing if overlay else ():
+        path = os.path.normpath(os.path.join(SRC, overlay.source, archive))
+        if not os.path.exists(path):
+            return os.path.relpath(path, ROOT)
 
     for localization in mod.get("localizations", []):
         if not os.path.isdir(os.path.join(SRC, localization.source)):
