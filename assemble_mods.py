@@ -771,6 +771,43 @@ def revolution_extras():
 ADVANCED_AI = "AdvancedAIMod v2.8/For ZH 1.04"
 
 
+ZH_ESCALATED = "ZeroHourEscalated_7.1.2"
+ZH_ESCALATED_ARCHIVES = ("SoundEffects",) + tuple(f"ZHE{part}" for part in (
+    "America", "ArabLeague", "Armor", "Audio", "BaathIraq", "BlueDragons", "Challenge", "China",
+    "CommandButton", "CommandSet", "ControlBarScheme", "Eva", "FXList", "GLA", "GeneralsStr", "Iraq",
+    "Israel", "Locomotor", "MappedImagesDefault", "Mouse", "Multiplayer", "NorthKorea",
+    "ObjectCreationList", "ParticleSystem", "PlayerTemplate", "Russia", "Science", "Scripts",
+    "SpecialPower", "StealthGeneral", "SystemExtra", "Textures", "ToxinTruck", "Ukraine", "Upgrade",
+    "Voice", "W3D", "Weapon",
+))
+
+
+ZH_ESCALATED_PLAYER_TEMPLATES = (f"{ZH_ESCALATED}/!!!ZHEPlayerTemplate.big", "\\Data\\INI\\PlayerTemplate.ini")
+ZH_ESCALATED_FACTION_BARS = {
+    "Arab": ("FactionAmericaLaserGeneral", "AmericaLaserGeneral"),
+    "Israel": ("FactionAmericaSuperWeaponGeneral", "AmericaSuperWeaponGeneral"),
+    "Iraq": ("FactionGLADemolitionGeneral", "GLADemolitionGeneral"),
+    "RU": ("FactionChinaTankGeneral", "ChinaTankGeneral"),
+    "KN": ("FactionGLAToxinGeneral", "GLAToxinGeneral"),
+}
+FACTION_BAR_TEXTURES = ("CommandBarPro_4096_1024", "PowersPro_2048_2048")
+
+
+def zh_escalated_layers():
+    return [
+        [Archive(ZH_ESCALATED, f"!!!{name}.big", name) for name in ZH_ESCALATED_ARCHIVES],
+        control_bar_pro_zh_layer(),
+    ]
+
+
+def zh_escalated_faction_bar_textures():
+    return [
+        (f"ZHEscalated/{faction}{texture}.tga", f"Art/Textures/{faction}{texture}.tga")
+        for faction in ZH_ESCALATED_FACTION_BARS
+        for texture in FACTION_BAR_TEXTURES
+    ]
+
+
 MODS = [
     {
         "dest": "GO_Mac_Mod_Contra007",
@@ -1856,6 +1893,33 @@ MODS = [
             "approxSizeMB": 2804,
         },
     },
+    {
+        "dest": "GO_Mac_Mod_ZHEscalated",
+        "assets": "ZHEscalated",
+        "catalog": {"id": "m_zh_escalated", "shortName": "ZH ESCALATED", "theme": "contra"},
+        "layers": zh_escalated_layers(),
+        "extras": [
+            (f"{ZH_ESCALATED}/Install_Final.bmp", "Install_Final.bmp"),
+            ("ZHEscalated/QuitWindowPro_1024_2048.dds", "Art/Textures/QuitWindowPro_1024_2048.dds"),
+            ("ZHEscalated/QuitMenu.wnd", "Window/Menus/QuitMenu.wnd"),
+            ("ZHEscalated/QuitNoSave.wnd", "Window/Menus/QuitNoSave.wnd"),
+        ] + zh_escalated_faction_bar_textures(),
+        "faction_bars": (ZH_ESCALATED_FACTION_BARS, ZH_ESCALATED_PLAYER_TEMPLATES),
+        "overrides": [],
+        "config": {
+            "id": "zh-escalated",
+            "displayName": "Zero Hour Escalated",
+            "version": "7.1.2",
+            "packageVersion": 1,
+            "baseGame": "zh",
+            "online": True,
+            "maskBaseScripts": True,
+            "description": "Zero Hour Escalated 7.1.2 (the special generals replaced by new factions: Arab League, Ba'athist Iraq, Israel, North Korea, Russia, Ukraine and the Phoenix Coalition) + Control Bar Pro 1.2 with its own bars for five factions, curated for macOS",
+            "author": "LordOfTadhg / curated for macOS",
+            "bigGlob": "*.big",
+            "approxSizeMB": 282,
+        },
+    },
 ]
 
 
@@ -1994,6 +2058,84 @@ def write_scheme_aliases(aliases, schemes_archive, dest):
         handle.write("\n\n".join(copies) + "\n")
 
     return len(copies)
+
+
+def faction_art(text, faction):
+    return re.sub(r"\b(?:America|Gla|China)(?=Pro\w|CommandBarPro_|PowersPro_)", faction, text)
+
+
+def read_text_entry(archive_path, entry_name):
+    return read_entry(archive_path, entry_name).decode("latin-1")
+
+
+def dress_side_scheme(schemes, side, faction):
+    blocks = [
+        block for block in re.finditer(r"(?ms)^ControlBarScheme\s+\S+[^\n]*$.*?^End\s*$", schemes)
+        if re.search(rf"(?m)^\s*Side\s*=?\s*{side}\s*$", block.group(0))
+    ]
+    if len(blocks) != 1:
+        raise SystemExit(f"Control Bar Pro has {len(blocks)} schemes for side {side}")
+
+    block = blocks[0]
+    base = re.search(r"\b(America|Gla|China)ProCommandBar\b", block.group(0)).group(1)
+    return schemes[:block.start()] + faction_art(block.group(0), faction) + schemes[block.end():], base
+
+
+def faction_mapped_images(base, faction):
+    stock = [
+        read_text_entry(CONTROL_BAR_PRO_ZH_SCHEMES, f"Data\\INI\\MappedImages\\HandCreated\\{base}{kind}.ini")
+        for kind in ("CommandBarPro", "PowersPro")
+    ]
+    return faction_art("\r\n".join(stock), faction)
+
+
+def faction_shortcut_layout(templates, template, faction):
+    block = re.search(rf"(?ms)^PlayerTemplate\s+{template}\b[^\n]*$.*?^End\s*$", templates)
+    if not block:
+        raise SystemExit(f"player template not found: {template}")
+
+    stock_layout = re.search(r"(?m)^\s*SpecialPowerShortcutWinName\s*=\s*(\S+)", block.group(0)).group(1)
+    layout = f"GenPowersShortcutBar{faction}.wnd"
+    window = read_text_entry(CONTROL_BAR_PRO_ZH_SCHEMES, f"Window\\{stock_layout}")
+    if f"{stock_layout}:" not in window:
+        raise SystemExit(f"window names in {stock_layout} do not carry its file name")
+
+    dressed_block = re.sub(r"(?m)^(\s*SpecialPowerShortcutWinName\s*=\s*)\S+", lambda m: m.group(1) + layout,
+                           block.group(0))
+    dressed_templates = templates[:block.start()] + dressed_block + templates[block.end():]
+    return dressed_templates, layout, faction_art(window.replace(f"{stock_layout}:", f"{layout}:"), faction)
+
+
+def write_text(dest_dir, relative, text):
+    if DRY_RUN:
+        return
+
+    path = os.path.join(dest_dir, relative)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "wb") as handle:
+        handle.write(text.encode("latin-1"))
+
+
+def write_faction_control_bars(factions, player_templates, dest_dir):
+    schemes = read_text_entry(CONTROL_BAR_PRO_ZH_SCHEMES, "Data\\INI\\ControlBarScheme.ini")
+    templates = read_text_entry(os.path.join(SRC, player_templates[0]), player_templates[1])
+    written = []
+
+    for faction, (template, side) in factions.items():
+        schemes, base = dress_side_scheme(schemes, side, faction)
+        images = f"Data/INI/MappedImages/HandCreated/{faction}Pro.ini"
+        write_text(dest_dir, images, faction_mapped_images(base, faction))
+
+        templates, layout, window = faction_shortcut_layout(templates, template, faction)
+        write_text(dest_dir, f"Window/{layout}", window)
+        written += [(images, f"{side} on {base}"), (f"Window/{layout}", template)]
+
+    write_text(dest_dir, "Data/INI/ControlBarScheme.ini", schemes)
+    write_text(dest_dir, "Data/INI/PlayerTemplate.ini", templates)
+    return written + [
+        ("Data/INI/ControlBarScheme.ini", f"Control Bar Pro, {len(factions)} sides dressed"),
+        ("Data/INI/PlayerTemplate.ini", f"{player_templates[0]}, {len(factions)} shortcut bars"),
+    ]
 
 
 def read_csf(path):
@@ -2157,6 +2299,10 @@ def missing_sources(mod):
         if not os.path.exists(os.path.join(SRC, source)):
             return source
 
+    faction_bars = mod.get("faction_bars")
+    if faction_bars and not os.path.exists(os.path.join(SRC, faction_bars[1][0])):
+        return faction_bars[1][0]
+
     map_cache = mod.get("map_cache")
     if map_cache:
         mod_cache_archive, generated_cache = map_cache
@@ -2249,6 +2395,11 @@ def build(mod):
         schemes_archive = mod.get("scheme_source", CONTROL_BAR_PRO_ZH_SCHEMES)
         count = write_scheme_aliases(scheme_aliases, schemes_archive, os.path.join(dest_dir, relative))
         print(f"    {relative:<34} <- {count} Control Bar Pro schemes for the mod's own sides")
+
+    faction_bars = mod.get("faction_bars")
+    if faction_bars:
+        for relative, origin in write_faction_control_bars(*faction_bars, dest_dir):
+            print(f"    {relative:<34} <- {origin}")
 
     map_cache = mod.get("map_cache")
     if map_cache:
